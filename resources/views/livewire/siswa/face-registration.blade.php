@@ -1375,6 +1375,73 @@
                 };
             }
 
+            function stopStreamTracks(stream) {
+                stream?.getTracks().forEach(track => {
+                    track.stop();
+                });
+            }
+
+            function cameraTimeout(message = 'Kamera terlalu lama merespons. Coba ulangi.') {
+                return new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error(message)), 8000);
+                });
+            }
+
+            function wait(ms) {
+                return new Promise(resolve => {
+                    setTimeout(resolve, ms);
+                });
+            }
+
+            async function requestCameraStream(facingMode, strictFacingMode) {
+                let timedOut = false;
+
+                const mediaPromise =
+                    navigator.mediaDevices
+                        .getUserMedia({
+                            video:
+                                getCameraConstraints(facingMode, strictFacingMode),
+                            audio: false,
+                        })
+                        .then(stream => {
+                            if (timedOut) {
+                                stopStreamTracks(stream);
+                                throw new Error('Kamera terlalu lama merespons. Coba ulangi.');
+                            }
+
+                            return stream;
+                        });
+
+                const timeoutPromise =
+                    new Promise((_, reject) => {
+                        setTimeout(() => {
+                            timedOut = true;
+                            reject(new Error('Kamera terlalu lama merespons. Coba ulangi.'));
+                        }, 8000);
+                    });
+
+                return Promise.race([
+                    mediaPromise,
+                    timeoutPromise,
+                ]);
+            }
+
+            async function attachCameraStream(stream) {
+                video.srcObject = stream;
+                updateVideoMirror();
+
+                try {
+                    await Promise.race([
+                        video.play(),
+                        cameraTimeout('Kamera aktif, tetapi video tidak tampil. Coba ulangi.'),
+                    ]);
+                } catch (error) {
+                    video.srcObject = null;
+                    stopStreamTracks(stream);
+                    throw error;
+                }
+            }
+
             async function getCameraStream(options = {}) {
                 const facingMode =
                     preferredFacingMode === 'environment' ? 'environment' : 'user';
@@ -1383,11 +1450,7 @@
                     Boolean(options.strictFacingMode);
 
                 try {
-                    return await navigator.mediaDevices.getUserMedia({
-                        video:
-                            getCameraConstraints(facingMode, strictFacingMode),
-                        audio: false,
-                    });
+                    return await requestCameraStream(facingMode, strictFacingMode);
                 } catch (error) {
                     if (
                         facingMode === 'environment'
@@ -1434,9 +1497,7 @@
                     return;
                 }
 
-                stream.getTracks().forEach(track => {
-                    track.stop();
-                });
+                stopStreamTracks(stream);
 
                 video.srcObject = null;
 
@@ -1478,12 +1539,11 @@
                     video.srcObject;
 
                 if (currentStream) {
-                    currentStream.getTracks().forEach(track => {
-                        track.stop();
-                    });
+                    stopStreamTracks(currentStream);
                 }
 
                 video.srcObject = null;
+                await wait(300);
 
                 try {
                     const stream =
@@ -1491,10 +1551,7 @@
                             strictFacingMode: true,
                         });
 
-                    video.srcObject = stream;
-
-                    await video.play();
-                    updateVideoMirror();
+                    await attachCameraStream(stream);
                     await loadModels();
 
                     setCameraButtonActive(true);
@@ -1509,10 +1566,7 @@
                                 strictFacingMode: true,
                             });
 
-                        video.srcObject = stream;
-
-                        await video.play();
-                        updateVideoMirror();
+                        await attachCameraStream(stream);
                         await loadModels();
 
                         setCameraButtonActive(true);
@@ -1661,10 +1715,7 @@
                     const stream =
                         await getCameraStream();
 
-                    video.srcObject = stream;
-
-                    await video.play();
-                    updateVideoMirror();
+                    await attachCameraStream(stream);
 
                     setCaptureStatus('Menyiapkan kotak deteksi');
 

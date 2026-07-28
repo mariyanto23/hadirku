@@ -721,6 +721,73 @@
             };
         }
 
+        function stopStreamTracks(stream) {
+            stream?.getTracks().forEach(track => {
+                track.stop();
+            });
+        }
+
+        function cameraTimeout(message = 'Kamera terlalu lama merespons. Coba ulangi.') {
+            return new Promise((_, reject) => {
+                setTimeout(() => reject(new Error(message)), 8000);
+            });
+        }
+
+        function wait(ms) {
+            return new Promise(resolve => {
+                setTimeout(resolve, ms);
+            });
+        }
+
+        async function requestCameraStream(facingMode, strictFacingMode) {
+            let timedOut = false;
+
+            const mediaPromise =
+                navigator.mediaDevices
+                    .getUserMedia({
+                        video:
+                            getCameraConstraints(facingMode, strictFacingMode),
+                        audio: false,
+                    })
+                    .then(stream => {
+                        if (timedOut) {
+                            stopStreamTracks(stream);
+                            throw new Error('Kamera terlalu lama merespons. Coba ulangi.');
+                        }
+
+                        return stream;
+                    });
+
+            const timeoutPromise =
+                new Promise((_, reject) => {
+                    setTimeout(() => {
+                        timedOut = true;
+                        reject(new Error('Kamera terlalu lama merespons. Coba ulangi.'));
+                    }, 8000);
+                });
+
+            return Promise.race([
+                mediaPromise,
+                timeoutPromise,
+            ]);
+        }
+
+        async function attachCameraStream(stream) {
+            video.srcObject = stream;
+            updateVideoMirror();
+
+            try {
+                await Promise.race([
+                    video.play(),
+                    cameraTimeout('Kamera aktif, tetapi video tidak tampil. Coba ulangi.'),
+                ]);
+            } catch (error) {
+                video.srcObject = null;
+                stopStreamTracks(stream);
+                throw error;
+            }
+        }
+
         async function startCameraStream(options = {}) {
 
             if (!navigator.mediaDevices?.getUserMedia) {
@@ -735,20 +802,9 @@
 
             try {
                 const stream =
-                    await navigator.mediaDevices.getUserMedia({
+                    await requestCameraStream(facingMode, strictFacingMode);
 
-                        video:
-                            getCameraConstraints(facingMode, strictFacingMode),
-
-                        audio: false,
-
-                    });
-
-                video.srcObject = stream;
-
-                await video.play();
-                updateVideoMirror();
-
+                await attachCameraStream(stream);
                 return;
             } catch (error) {
                 if (
@@ -770,9 +826,7 @@
 
             if (!stream) return;
 
-            stream.getTracks().forEach(track => {
-                track.stop();
-            });
+            stopStreamTracks(stream);
 
             video.srcObject = null;
             clearFaceOverlay();
@@ -803,6 +857,7 @@
             setStatus('Mengganti kamera', 'blue');
 
             stopCameraStream();
+            await wait(300);
 
             try {
                 await startCameraStream({
