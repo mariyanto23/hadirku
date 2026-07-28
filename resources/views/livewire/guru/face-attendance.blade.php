@@ -194,7 +194,7 @@
                         autoplay
                         muted
                         playsinline
-                        class="aspect-[3/4] max-h-[68vh] w-full bg-slate-950 object-contain sm:aspect-video sm:max-h-none"
+                        class="aspect-[3/4] max-h-[68vh] w-full bg-slate-950 object-cover sm:aspect-video sm:max-h-none sm:object-contain"
                     ></video>
 
                     <canvas
@@ -697,11 +697,12 @@
                     ideal: forcePortrait ? 720 : 640,
                 },
                 height: {
-                    ideal: forcePortrait ? 960 : 480,
+                    ideal: forcePortrait ? 1280 : 480,
                 },
                 aspectRatio: {
-                    ideal: forcePortrait ? 3 / 4 : 4 / 3,
+                    ideal: forcePortrait ? 9 / 16 : 4 / 3,
                 },
+                resizeMode: 'crop-and-scale',
                 facingMode: strictFacingMode
                     ? { exact: facingMode }
                     : { ideal: facingMode },

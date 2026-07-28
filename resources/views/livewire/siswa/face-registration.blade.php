@@ -490,7 +490,7 @@
                                                     autoplay
                                                     muted
                                                     playsinline
-                                                    class="aspect-[3/4] max-h-[68vh] w-full bg-slate-950 object-contain sm:aspect-video sm:max-h-[52vh]"
+                                                    class="aspect-[3/4] max-h-[68vh] w-full bg-slate-950 object-cover sm:aspect-video sm:max-h-[52vh] sm:object-contain"
                                                 ></video>
 
                                                 <canvas
@@ -551,25 +551,7 @@
                                                 Kamera belum aktif
                                             </div>
 
-                                            <div class="mt-4 grid gap-3 md:grid-cols-[minmax(0,18rem)_1fr]">
-                                                <div class="hidden grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950/50 md:grid">
-                                                    <button
-                                                        type="button"
-                                                        data-face-registration-camera="user"
-                                                        class="rounded-xl px-3 py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
-                                                    >
-                                                        Depan
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        data-face-registration-camera="environment"
-                                                        class="rounded-xl px-3 py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
-                                                    >
-                                                        Belakang
-                                                    </button>
-                                                </div>
-
+                                            <div class="mt-4">
                                                 <div class="grid gap-3 sm:grid-cols-3">
                                                     <button
                                                         id="startCamera"
@@ -780,7 +762,7 @@
                                 autoplay
                                 muted
                                 playsinline
-                                class="aspect-[3/4] max-h-[68vh] w-full bg-slate-950 object-contain sm:aspect-video sm:max-h-none"
+                                class="aspect-[3/4] max-h-[68vh] w-full bg-slate-950 object-cover sm:aspect-video sm:max-h-none sm:object-contain"
                             ></video>
 
                             <canvas
@@ -837,25 +819,7 @@
                             </button>
                         </div>
 
-                        <div class="mt-5 grid gap-3 md:grid-cols-[minmax(0,18rem)_1fr]">
-                            <div class="hidden grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950/50 md:grid">
-                                <button
-                                    type="button"
-                                    data-face-registration-camera="user"
-                                    class="rounded-xl px-3 py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
-                                >
-                                    Depan
-                                </button>
-
-                                <button
-                                    type="button"
-                                    data-face-registration-camera="environment"
-                                    class="rounded-xl px-3 py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
-                                >
-                                    Belakang
-                                </button>
-                            </div>
-
+                        <div class="mt-5">
                             <div class="grid gap-3 sm:grid-cols-3">
                                 <button
                                     id="startCamera"
@@ -961,9 +925,6 @@
 
             const cameraToggleIcon =
                 document.querySelector('[data-face-registration-camera-toggle-icon]');
-
-            const cameraModeButtons =
-                document.querySelectorAll('[data-face-registration-camera]');
 
             const facePhotoUpload =
                 document.getElementById('facePhotoUpload');
@@ -1345,24 +1306,6 @@
 
             }
 
-            function updateCameraModeButtons(disabled = false) {
-                cameraModeButtons.forEach(button => {
-                    const active =
-                        button.dataset.faceRegistrationCamera === preferredFacingMode;
-
-                    button.disabled = disabled;
-                    button.classList.toggle('bg-white', active);
-                    button.classList.toggle('text-blue-600', active);
-                    button.classList.toggle('shadow-sm', active);
-                    button.classList.toggle('dark:bg-slate-800', active);
-                    button.classList.toggle('dark:text-blue-300', active);
-                    button.classList.toggle('text-slate-500', !active);
-                    button.classList.toggle('hover:text-slate-800', !active && !disabled);
-                    button.classList.toggle('dark:text-slate-400', !active);
-                    button.classList.toggle('dark:hover:text-white', !active && !disabled);
-                });
-            }
-
             function getOppositeFacingMode() {
                 return preferredFacingMode === 'environment'
                     ? 'user'
@@ -1395,7 +1338,6 @@
                     : 'user';
 
                 localStorage.setItem(cameraModeStorageKey, preferredFacingMode);
-                updateCameraModeButtons(Boolean(video.srcObject));
                 updateCameraToggle(switchingCamera);
             }
 
@@ -1409,11 +1351,12 @@
                         ideal: forcePortrait ? 720 : 640,
                     },
                     height: {
-                        ideal: forcePortrait ? 960 : 480,
+                        ideal: forcePortrait ? 1280 : 480,
                     },
                     aspectRatio: {
-                        ideal: forcePortrait ? 3 / 4 : 4 / 3,
+                        ideal: forcePortrait ? 9 / 16 : 4 / 3,
                     },
+                    resizeMode: 'crop-and-scale',
                     facingMode: strictFacingMode
                         ? { exact: facingMode }
                         : { ideal: facingMode },
@@ -1462,7 +1405,6 @@
                     ? 'Matikan Kamera'
                     : 'Aktifkan Kamera';
 
-                updateCameraModeButtons(active);
                 updateCameraToggle(!active);
 
             }
@@ -1499,18 +1441,7 @@
 
             window.hadirkuStopFaceRegistrationCamera = stopCameraStream;
 
-            updateCameraModeButtons(Boolean(video.srcObject));
             updateCameraToggle(!video.srcObject);
-
-            cameraModeButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    if (video.srcObject) {
-                        return;
-                    }
-
-                    setPreferredFacingMode(button.dataset.faceRegistrationCamera);
-                });
-            });
 
             async function toggleCameraFacingMode() {
                 if (switchingCamera || !video.srcObject) {
@@ -1526,7 +1457,6 @@
                 switchingCamera = true;
                 setPreferredFacingMode(nextFacingMode);
                 updateCameraToggle(true);
-                updateCameraModeButtons(true);
                 setCaptureStatus('Mengganti kamera');
 
                 stopFacePreviewLoop();
@@ -1585,7 +1515,6 @@
                 } finally {
                     switchingCamera = false;
                     updateCameraToggle(!video.srcObject);
-                    updateCameraModeButtons(Boolean(video.srcObject));
                 }
             }
 
@@ -1701,7 +1630,6 @@
                     }
 
                     startCamera.disabled = true;
-                    updateCameraModeButtons(true);
                     updateCameraToggle(true);
                     cameraButtonText.textContent = 'Mengaktifkan...';
 
