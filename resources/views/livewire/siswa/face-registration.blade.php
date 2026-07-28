@@ -490,7 +490,7 @@
                                                     autoplay
                                                     muted
                                                     playsinline
-                                                    class="aspect-video max-h-[52vh] w-full bg-slate-950 object-contain"
+                                                    class="aspect-[3/4] max-h-[68vh] w-full bg-slate-950 object-contain sm:aspect-video sm:max-h-[52vh]"
                                                 ></video>
 
                                                 <canvas
@@ -529,44 +529,64 @@
                                                 Kamera belum aktif
                                             </div>
 
-                                            <div class="mt-4 grid gap-3 sm:grid-cols-3">
-                                                <button
-                                                    id="startCamera"
-                                                    type="button"
-                                                    class="hk-btn-primary"
-                                                >
-                                                    <svg id="startCameraIcon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h4l2-3h4l2 3h4v13H4V7Zm8 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-                                                    </svg>
+                                            <div class="mt-4 grid gap-3 lg:grid-cols-[minmax(0,18rem)_1fr]">
+                                                <div class="grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950/50">
+                                                    <button
+                                                        type="button"
+                                                        data-face-registration-camera="user"
+                                                        class="rounded-xl px-3 py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+                                                    >
+                                                        Depan
+                                                    </button>
 
-                                                    <svg id="stopCameraIcon" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h12v12H6V6Z" />
-                                                    </svg>
+                                                    <button
+                                                        type="button"
+                                                        data-face-registration-camera="environment"
+                                                        class="rounded-xl px-3 py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+                                                    >
+                                                        Belakang
+                                                    </button>
+                                                </div>
 
-                                                    <span id="cameraButtonText">
-                                                        Aktifkan Kamera
-                                                    </span>
-                                                </button>
+                                                <div class="grid gap-3 sm:grid-cols-3">
+                                                    <button
+                                                        id="startCamera"
+                                                        type="button"
+                                                        class="hk-btn-primary"
+                                                    >
+                                                        <svg id="startCameraIcon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h4l2-3h4l2 3h4v13H4V7Zm8 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                                                        </svg>
 
-                                                <button
-                                                    id="captureFace"
-                                                    type="button"
-                                                    class="hk-btn-success"
-                                                >
-                                                    <span id="captureFaceSpinner" class="hidden h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-                                                    <svg id="captureFaceIcon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
-                                                    </svg>
-                                                    <span id="captureFaceText">Ambil Wajah</span>
-                                                </button>
+                                                        <svg id="stopCameraIcon" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h12v12H6V6Z" />
+                                                        </svg>
 
-                                                <button
-                                                    id="resetDescriptors"
-                                                    type="button"
-                                                    class="hk-btn-secondary"
-                                                >
-                                                    Batal
-                                                </button>
+                                                        <span id="cameraButtonText">
+                                                            Aktifkan Kamera
+                                                        </span>
+                                                    </button>
+
+                                                    <button
+                                                        id="captureFace"
+                                                        type="button"
+                                                        class="hk-btn-success"
+                                                    >
+                                                        <span id="captureFaceSpinner" class="hidden h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                                                        <svg id="captureFaceIcon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+                                                        </svg>
+                                                        <span id="captureFaceText">Ambil Wajah</span>
+                                                    </button>
+
+                                                    <button
+                                                        id="resetDescriptors"
+                                                        type="button"
+                                                        class="hk-btn-secondary"
+                                                    >
+                                                        Batal
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -738,7 +758,7 @@
                                 autoplay
                                 muted
                                 playsinline
-                                class="aspect-video w-full bg-slate-950 object-contain"
+                                class="aspect-[3/4] max-h-[68vh] w-full bg-slate-950 object-contain sm:aspect-video sm:max-h-none"
                             ></video>
 
                             <canvas
@@ -758,44 +778,64 @@
                             </div>
                         </div>
 
-                        <div class="mt-5 grid gap-3 sm:grid-cols-3">
-                            <button
-                                id="startCamera"
-                                type="button"
-                                class="hk-btn-primary"
-                            >
-                                <svg id="startCameraIcon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h4l2-3h4l2 3h4v13H4V7Zm8 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-                                </svg>
+                        <div class="mt-5 grid gap-3 lg:grid-cols-[minmax(0,18rem)_1fr]">
+                            <div class="grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950/50">
+                                <button
+                                    type="button"
+                                    data-face-registration-camera="user"
+                                    class="rounded-xl px-3 py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+                                >
+                                    Depan
+                                </button>
 
-                                <svg id="stopCameraIcon" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h12v12H6V6Z" />
-                                </svg>
+                                <button
+                                    type="button"
+                                    data-face-registration-camera="environment"
+                                    class="rounded-xl px-3 py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+                                >
+                                    Belakang
+                                </button>
+                            </div>
 
-                                <span id="cameraButtonText">
-                                    Aktifkan Kamera
-                                </span>
-                            </button>
+                            <div class="grid gap-3 sm:grid-cols-3">
+                                <button
+                                    id="startCamera"
+                                    type="button"
+                                    class="hk-btn-primary"
+                                >
+                                    <svg id="startCameraIcon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h4l2-3h4l2 3h4v13H4V7Zm8 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                                    </svg>
 
-                            <button
-                                id="captureFace"
-                                type="button"
-                                class="hk-btn-success"
-                            >
-                                <span id="captureFaceSpinner" class="hidden h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-                                <svg id="captureFaceIcon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
-                                </svg>
-                                <span id="captureFaceText">Ambil Wajah</span>
-                            </button>
+                                    <svg id="stopCameraIcon" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h12v12H6V6Z" />
+                                    </svg>
 
-                            <button
-                                id="resetDescriptors"
-                                type="button"
-                                class="hk-btn-secondary"
-                            >
-                                Reset Descriptor
-                            </button>
+                                    <span id="cameraButtonText">
+                                        Aktifkan Kamera
+                                    </span>
+                                </button>
+
+                                <button
+                                    id="captureFace"
+                                    type="button"
+                                    class="hk-btn-success"
+                                >
+                                    <span id="captureFaceSpinner" class="hidden h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                                    <svg id="captureFaceIcon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+                                    </svg>
+                                    <span id="captureFaceText">Ambil Wajah</span>
+                                </button>
+
+                                <button
+                                    id="resetDescriptors"
+                                    type="button"
+                                    class="hk-btn-secondary"
+                                >
+                                    Reset Descriptor
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -857,6 +897,9 @@
             const cameraInactiveState =
                 document.getElementById('cameraInactiveState');
 
+            const cameraModeButtons =
+                document.querySelectorAll('[data-face-registration-camera]');
+
             const facePhotoUpload =
                 document.getElementById('facePhotoUpload');
 
@@ -908,6 +951,16 @@
             let lastFaceDetectedAt = 0;
 
             let captureProcessing = false;
+
+            const cameraModeStorageKey =
+                'hadirkuFaceRegistrationFacingMode';
+
+            let preferredFacingMode =
+                localStorage.getItem(cameraModeStorageKey) || 'user';
+
+            if (!['user', 'environment'].includes(preferredFacingMode)) {
+                preferredFacingMode = 'user';
+            }
 
             if (modelState.loaded) {
                 modelStatus.textContent = 'Model siap';
@@ -1225,6 +1278,65 @@
 
             }
 
+            function updateCameraModeButtons(disabled = false) {
+                cameraModeButtons.forEach(button => {
+                    const active =
+                        button.dataset.faceRegistrationCamera === preferredFacingMode;
+
+                    button.disabled = disabled;
+                    button.classList.toggle('bg-white', active);
+                    button.classList.toggle('text-blue-600', active);
+                    button.classList.toggle('shadow-sm', active);
+                    button.classList.toggle('dark:bg-slate-800', active);
+                    button.classList.toggle('dark:text-blue-300', active);
+                    button.classList.toggle('text-slate-500', !active);
+                    button.classList.toggle('hover:text-slate-800', !active && !disabled);
+                    button.classList.toggle('dark:text-slate-400', !active);
+                    button.classList.toggle('dark:hover:text-white', !active && !disabled);
+                });
+            }
+
+            function setPreferredFacingMode(mode) {
+                preferredFacingMode = mode === 'environment'
+                    ? 'environment'
+                    : 'user';
+
+                localStorage.setItem(cameraModeStorageKey, preferredFacingMode);
+                updateCameraModeButtons(Boolean(video.srcObject));
+            }
+
+            async function getCameraStream() {
+                const facingMode =
+                    preferredFacingMode === 'environment' ? 'environment' : 'user';
+
+                try {
+                    return await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: {
+                                ideal: facingMode === 'environment' ? 720 : 640,
+                            },
+                            height: {
+                                ideal: facingMode === 'environment' ? 960 : 480,
+                            },
+                            facingMode: {
+                                ideal: facingMode,
+                            },
+                        },
+                        audio: false,
+                    });
+                } catch (error) {
+                    if (
+                        facingMode === 'environment'
+                        && ['NotFoundError', 'OverconstrainedError', 'ConstraintNotSatisfiedError'].includes(error?.name)
+                    ) {
+                        setPreferredFacingMode('user');
+                        throw new Error('Kamera belakang tidak tersedia. Pilih kamera depan lalu coba lagi.');
+                    }
+
+                    throw error;
+                }
+            }
+
             function setCameraButtonActive(active) {
 
                 startCamera.classList.toggle('hk-btn-primary', !active);
@@ -1240,6 +1352,8 @@
                 cameraButtonText.textContent = active
                     ? 'Matikan Kamera'
                     : 'Aktifkan Kamera';
+
+                updateCameraModeButtons(active);
 
             }
 
@@ -1274,6 +1388,18 @@
             }
 
             window.hadirkuStopFaceRegistrationCamera = stopCameraStream;
+
+            updateCameraModeButtons(Boolean(video.srcObject));
+
+            cameraModeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (video.srcObject) {
+                        return;
+                    }
+
+                    setPreferredFacingMode(button.dataset.faceRegistrationCamera);
+                });
+            });
 
             loadModels().catch(error => {
 
@@ -1385,6 +1511,7 @@
                     }
 
                     startCamera.disabled = true;
+                    updateCameraModeButtons(true);
                     cameraButtonText.textContent = 'Mengaktifkan...';
 
                     setCaptureStatus('Meminta akses kamera');
@@ -1398,18 +1525,7 @@
                     }
 
                     const stream =
-                        await navigator.mediaDevices.getUserMedia({
-                            video: {
-                                width: {
-                                    ideal: 640,
-                                },
-                                height: {
-                                    ideal: 480,
-                                },
-                                facingMode: 'user',
-                            },
-                            audio: false,
-                        });
+                        await getCameraStream();
 
                     video.srcObject = stream;
 

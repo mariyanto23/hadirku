@@ -194,7 +194,7 @@
                         autoplay
                         muted
                         playsinline
-                        class="aspect-video w-full bg-slate-950 object-contain"
+                        class="aspect-[3/4] max-h-[68vh] w-full bg-slate-950 object-contain sm:aspect-video sm:max-h-none"
                     ></video>
 
                     <canvas
@@ -228,30 +228,52 @@
                     </div>
                 </div>
 
-                <div class="mt-5 flex flex-col gap-3 sm:flex-row">
-                    <button
-                        id="startScan"
-                        type="button"
-                        @disabled(! $availability['can_scan'])
-                        class="hk-btn-primary flex-1 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 3H5a2 2 0 0 0-2 2v2m14-4h2a2 2 0 0 1 2 2v2M7 21H5a2 2 0 0 1-2-2v-2m18 0v2a2 2 0 0 1-2 2h-2M8 11a4 4 0 0 1 8 0m-9 6a5 5 0 0 1 10 0" />
-                        </svg>
-                        {{ $availability['can_scan'] ? 'Mulai Pemindaian' : 'Presensi Ditutup' }}
-                    </button>
+                <div class="mt-5 grid gap-3 lg:grid-cols-[minmax(0,18rem)_1fr]">
+                    <div class="grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950/50">
+                        <button
+                            id="faceAttendanceCameraUser"
+                            type="button"
+                            data-face-attendance-camera="user"
+                            class="rounded-xl px-3 py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+                        >
+                            Depan
+                        </button>
 
-                    <button
-                        id="stopScan"
-                        type="button"
-                        disabled
-                        class="hk-btn-secondary flex-1 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h12v12H6V6Z" />
-                        </svg>
-                        Hentikan Pemindaian
-                    </button>
+                        <button
+                            id="faceAttendanceCameraEnvironment"
+                            type="button"
+                            data-face-attendance-camera="environment"
+                            class="rounded-xl px-3 py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+                        >
+                            Belakang
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col gap-3 sm:flex-row">
+                        <button
+                            id="startScan"
+                            type="button"
+                            @disabled(! $availability['can_scan'])
+                            class="hk-btn-primary flex-1 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 3H5a2 2 0 0 0-2 2v2m14-4h2a2 2 0 0 1 2 2v2M7 21H5a2 2 0 0 1-2-2v-2m18 0v2a2 2 0 0 1-2 2h-2M8 11a4 4 0 0 1 8 0m-9 6a5 5 0 0 1 10 0" />
+                            </svg>
+                            {{ $availability['can_scan'] ? 'Mulai Pemindaian' : 'Presensi Ditutup' }}
+                        </button>
+
+                        <button
+                            id="stopScan"
+                            type="button"
+                            disabled
+                            class="hk-btn-secondary flex-1 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h12v12H6V6Z" />
+                            </svg>
+                            Hentikan Pemindaian
+                        </button>
+                    </div>
                 </div>
             </section>
 
@@ -346,6 +368,9 @@
         const classPickerToggle =
             document.getElementById('classPickerToggle');
 
+        const cameraModeButtons =
+            document.querySelectorAll('[data-face-attendance-camera]');
+
         if (!video || video.dataset.faceAttendanceReady === 'true') {
             return;
         }
@@ -367,6 +392,16 @@
         let modelsLoaded = false;
 
         let lastUnknownSoundAt = 0;
+
+        const cameraModeStorageKey =
+            'hadirkuFaceAttendanceFacingMode';
+
+        let preferredFacingMode =
+            localStorage.getItem(cameraModeStorageKey) || 'user';
+
+        if (!['user', 'environment'].includes(preferredFacingMode)) {
+            preferredFacingMode = 'user';
+        }
 
         const attendanceCanScan =
             @js((bool) $availability['can_scan']);
@@ -400,11 +435,39 @@
             return document.getElementById('classSelect');
         }
 
+        function updateCameraModeButtons(disabled = false) {
+            cameraModeButtons.forEach(button => {
+                const active =
+                    button.dataset.faceAttendanceCamera === preferredFacingMode;
+
+                button.disabled = disabled;
+                button.classList.toggle('bg-white', active);
+                button.classList.toggle('text-blue-600', active);
+                button.classList.toggle('shadow-sm', active);
+                button.classList.toggle('dark:bg-slate-800', active);
+                button.classList.toggle('dark:text-blue-300', active);
+                button.classList.toggle('text-slate-500', !active);
+                button.classList.toggle('hover:text-slate-800', !active && !disabled);
+                button.classList.toggle('dark:text-slate-400', !active);
+                button.classList.toggle('dark:hover:text-white', !active && !disabled);
+            });
+        }
+
+        function setPreferredFacingMode(mode) {
+            preferredFacingMode = mode === 'environment'
+                ? 'environment'
+                : 'user';
+
+            localStorage.setItem(cameraModeStorageKey, preferredFacingMode);
+            updateCameraModeButtons(Boolean(video.srcObject) || !attendanceCanScan);
+        }
+
         function setScanningState(active) {
             const classSelect = getClassSelect();
 
             startScan.disabled = active || !attendanceCanScan;
             stopScan.disabled = !active;
+            updateCameraModeButtons(active || !attendanceCanScan);
 
             if (classSelect) {
                 classSelect.disabled = active;
@@ -551,24 +614,45 @@
                 throw new Error('Browser tidak mendukung akses kamera.');
             }
 
-            const stream =
-                await navigator.mediaDevices.getUserMedia({
+            const facingMode =
+                preferredFacingMode === 'environment' ? 'environment' : 'user';
 
-                    video: {
-                        width: {
-                            ideal: 640,
+            try {
+                const stream =
+                    await navigator.mediaDevices.getUserMedia({
+
+                        video: {
+                            width: {
+                                ideal: facingMode === 'environment' ? 720 : 640,
+                            },
+                            height: {
+                                ideal: facingMode === 'environment' ? 960 : 480,
+                            },
+                            facingMode: {
+                                ideal: facingMode,
+                            },
                         },
-                        height: {
-                            ideal: 480,
-                        },
-                        facingMode: 'user',
-                    },
 
-                    audio: false,
+                        audio: false,
 
-                });
+                    });
 
-            video.srcObject = stream;
+                video.srcObject = stream;
+
+                await video.play();
+
+                return;
+            } catch (error) {
+                if (
+                    facingMode === 'environment'
+                    && ['NotFoundError', 'OverconstrainedError', 'ConstraintNotSatisfiedError'].includes(error?.name)
+                ) {
+                    setPreferredFacingMode('user');
+                    throw new Error('Kamera belakang tidak tersedia. Pilih kamera depan lalu coba lagi.');
+                }
+
+                throw error;
+            }
 
         }
 
@@ -588,6 +672,17 @@
         }
 
         setScanningState(false);
+        updateCameraModeButtons(!attendanceCanScan);
+
+        cameraModeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (video.srcObject) {
+                    return;
+                }
+
+                setPreferredFacingMode(button.dataset.faceAttendanceCamera);
+            });
+        });
 
         startScan.addEventListener('click', async () => {
 
@@ -624,6 +719,7 @@
 
             startScan.disabled = true;
             stopScan.disabled = true;
+            updateCameraModeButtons(true);
 
             try {
 
