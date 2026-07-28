@@ -1114,6 +1114,9 @@
                 if (!faceOverlay) return;
 
                 const context = faceOverlay.getContext('2d');
+                const boxX = isFrontCamera()
+                    ? displaySize.width - box.x - box.width
+                    : box.x;
 
                 context.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
             }
@@ -1142,17 +1145,17 @@
                 context.strokeStyle = color;
                 context.shadowColor = 'rgba(15, 23, 42, .8)';
                 context.shadowBlur = 8;
-                context.strokeRect(box.x, box.y, box.width, box.height);
+                context.strokeRect(boxX, box.y, box.width, box.height);
                 context.shadowBlur = 0;
 
                 const labelWidth = Math.max(context.measureText(label).width + 18, 112);
                 const labelY = Math.max(box.y - 30, 8);
 
                 context.fillStyle = color;
-                context.fillRect(box.x, labelY, labelWidth, 24);
+                context.fillRect(boxX, labelY, labelWidth, 24);
                 context.fillStyle = '#ffffff';
                 context.font = '700 12px sans-serif';
-                context.fillText(label, box.x + 9, labelY + 16);
+                context.fillText(label, boxX + 9, labelY + 16);
             }
 
             function stopFacePreviewLoop() {
@@ -1338,7 +1341,16 @@
                     : 'user';
 
                 localStorage.setItem(cameraModeStorageKey, preferredFacingMode);
+                updateVideoMirror();
                 updateCameraToggle(switchingCamera);
+            }
+
+            function isFrontCamera() {
+                return preferredFacingMode === 'user';
+            }
+
+            function updateVideoMirror() {
+                video.classList.toggle('-scale-x-100', isFrontCamera());
             }
 
             function getCameraConstraints(facingMode, strictFacingMode = false) {
@@ -1441,6 +1453,7 @@
 
             window.hadirkuStopFaceRegistrationCamera = stopCameraStream;
 
+            updateVideoMirror();
             updateCameraToggle(!video.srcObject);
 
             async function toggleCameraFacingMode() {
@@ -1481,6 +1494,7 @@
                     video.srcObject = stream;
 
                     await video.play();
+                    updateVideoMirror();
                     await loadModels();
 
                     setCameraButtonActive(true);
@@ -1498,6 +1512,7 @@
                         video.srcObject = stream;
 
                         await video.play();
+                        updateVideoMirror();
                         await loadModels();
 
                         setCameraButtonActive(true);
@@ -1649,6 +1664,7 @@
                     video.srcObject = stream;
 
                     await video.play();
+                    updateVideoMirror();
 
                     setCaptureStatus('Menyiapkan kotak deteksi');
 

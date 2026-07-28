@@ -536,7 +536,16 @@
                 : 'user';
 
             localStorage.setItem(cameraModeStorageKey, preferredFacingMode);
+            updateVideoMirror();
             updateCameraToggle(switchingCamera || !attendanceCanScan);
+        }
+
+        function isFrontCamera() {
+            return preferredFacingMode === 'user';
+        }
+
+        function updateVideoMirror() {
+            video.classList.toggle('-scale-x-100', isFrontCamera());
         }
 
         function setScanningState(active) {
@@ -567,6 +576,9 @@
             if (!faceOverlay) return;
 
             const context = faceOverlay.getContext('2d');
+            const boxX = isFrontCamera()
+                ? displaySize.width - box.x - box.width
+                : box.x;
 
             context.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
         }
@@ -595,7 +607,7 @@
             context.strokeStyle = color;
             context.shadowColor = 'rgba(15, 23, 42, .8)';
             context.shadowBlur = 8;
-            context.strokeRect(box.x, box.y, box.width, box.height);
+            context.strokeRect(boxX, box.y, box.width, box.height);
             context.shadowBlur = 0;
 
             const labelText = label || 'Wajah';
@@ -603,10 +615,10 @@
             const labelY = Math.max(box.y - 30, 8);
 
             context.fillStyle = color;
-            context.fillRect(box.x, labelY, labelWidth, 24);
+            context.fillRect(boxX, labelY, labelWidth, 24);
             context.fillStyle = '#ffffff';
             context.font = '700 12px sans-serif';
-            context.fillText(labelText, box.x + 9, labelY + 16);
+            context.fillText(labelText, boxX + 9, labelY + 16);
         }
 
         function setStatus(text, color = 'slate') {
@@ -735,6 +747,7 @@
                 video.srcObject = stream;
 
                 await video.play();
+                updateVideoMirror();
 
                 return;
             } catch (error) {
@@ -767,6 +780,7 @@
         }
 
         setScanningState(false);
+        updateVideoMirror();
         updateCameraToggle(!attendanceCanScan);
         updateMobileScanToggle();
 
