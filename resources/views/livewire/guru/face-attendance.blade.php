@@ -227,58 +227,50 @@
                         <span id="scanStatus">Siap memindai</span>
                     </div>
 
-                    <div class="absolute bottom-4 right-4 grid grid-cols-2 gap-1 rounded-2xl bg-slate-950/70 p-1 shadow-lg ring-1 ring-white/15 backdrop-blur md:hidden">
-                        <button
-                            type="button"
-                            data-face-attendance-camera="user"
-                            aria-label="Gunakan kamera depan"
-                            title="Kamera depan"
-                            class="flex h-10 w-10 items-center justify-center rounded-xl text-white/70 transition disabled:cursor-not-allowed disabled:opacity-50"
+                    <button
+                        id="faceAttendanceCameraToggle"
+                        type="button"
+                        aria-label="Balik kamera"
+                        title="Balik kamera"
+                        class="absolute bottom-4 right-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-950/60 text-white shadow-lg ring-1 ring-white/20 backdrop-blur transition hover:bg-slate-950/80 disabled:cursor-not-allowed disabled:opacity-50 md:hidden"
+                    >
+                        <svg
+                            id="faceAttendanceCameraToggleIcon"
+                            class="h-7 w-7"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.25"
                         >
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 19a6 6 0 0 1 12 0" />
-                            </svg>
-                        </button>
-
-                        <button
-                            type="button"
-                            data-face-attendance-camera="environment"
-                            aria-label="Gunakan kamera belakang"
-                            title="Kamera belakang"
-                            class="flex h-10 w-10 items-center justify-center rounded-xl text-white/70 transition disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h4l2-3h4l2 3h4v13H4V7Z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m16 12 2 2-2 2" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M18 14h-5a3 3 0 0 1-3-3" />
-                            </svg>
-                        </button>
-                    </div>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 12a8 8 0 0 1 13.66-5.66" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.66 6.34H14m3.66 0V2.68" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 12A8 8 0 0 1 6.34 17.66" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.34 17.66H10m-3.66 0v3.66" />
+                        </svg>
+                    </button>
                 </div>
 
-                <div class="mt-5 grid gap-3 md:grid-cols-[minmax(0,18rem)_1fr]">
-                    <div class="hidden grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950/50 md:grid">
-                        <button
-                            id="faceAttendanceCameraUser"
-                            type="button"
-                            data-face-attendance-camera="user"
-                            class="rounded-xl px-3 py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
-                        >
-                            Depan
-                        </button>
+                <div class="mt-5">
+                    <button
+                        id="mobileScanToggle"
+                        type="button"
+                        @disabled(! $availability['can_scan'])
+                        class="hk-btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60 sm:hidden"
+                    >
+                        <svg id="mobileScanStartIcon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 3H5a2 2 0 0 0-2 2v2m14-4h2a2 2 0 0 1 2 2v2M7 21H5a2 2 0 0 1-2-2v-2m18 0v2a2 2 0 0 1-2 2h-2M8 11a4 4 0 0 1 8 0m-9 6a5 5 0 0 1 10 0" />
+                        </svg>
 
-                        <button
-                            id="faceAttendanceCameraEnvironment"
-                            type="button"
-                            data-face-attendance-camera="environment"
-                            class="rounded-xl px-3 py-2 text-xs font-extrabold transition disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
-                        >
-                            Belakang
-                        </button>
-                    </div>
+                        <svg id="mobileScanStopIcon" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h12v12H6V6Z" />
+                        </svg>
 
-                    <div class="flex flex-col gap-3 sm:flex-row">
+                        <span id="mobileScanToggleText">
+                            {{ $availability['can_scan'] ? 'Mulai Pemindaian' : 'Presensi Ditutup' }}
+                        </span>
+                    </button>
+
+                    <div class="hidden gap-3 sm:flex">
                         <button
                             id="startScan"
                             type="button"
@@ -382,6 +374,18 @@
         const stopScan =
             document.getElementById('stopScan');
 
+        const mobileScanToggle =
+            document.getElementById('mobileScanToggle');
+
+        const mobileScanToggleText =
+            document.getElementById('mobileScanToggleText');
+
+        const mobileScanStartIcon =
+            document.getElementById('mobileScanStartIcon');
+
+        const mobileScanStopIcon =
+            document.getElementById('mobileScanStopIcon');
+
         const scanStatus =
             document.getElementById('scanStatus');
 
@@ -397,8 +401,11 @@
         const classPickerToggle =
             document.getElementById('classPickerToggle');
 
-        const cameraModeButtons =
-            document.querySelectorAll('[data-face-attendance-camera]');
+        const cameraToggleButton =
+            document.getElementById('faceAttendanceCameraToggle');
+
+        const cameraToggleIcon =
+            document.getElementById('faceAttendanceCameraToggleIcon');
 
         if (!video || video.dataset.faceAttendanceReady === 'true') {
             return;
@@ -421,6 +428,14 @@
         let modelsLoaded = false;
 
         let lastUnknownSoundAt = 0;
+
+        let switchingCamera = false;
+
+        let scanActive = false;
+
+        let scanStarting = false;
+
+        let scanSessionId = 0;
 
         const cameraModeStorageKey =
             'hadirkuFaceAttendanceFacingMode';
@@ -464,27 +479,50 @@
             return document.getElementById('classSelect');
         }
 
-        function updateCameraModeButtons(disabled = false) {
-            cameraModeButtons.forEach(button => {
-                const active =
-                    button.dataset.faceAttendanceCamera === preferredFacingMode;
+        function getOppositeFacingMode() {
+            return preferredFacingMode === 'environment'
+                ? 'user'
+                : 'environment';
+        }
 
-                const iconButton =
-                    button.classList.contains('h-10');
+        function getCameraTargetLabel(mode) {
+            return mode === 'environment'
+                ? 'kamera belakang'
+                : 'kamera depan';
+        }
 
-                button.disabled = disabled;
-                button.classList.toggle('bg-white', active);
-                button.classList.toggle('text-blue-600', active);
-                button.classList.toggle('shadow-sm', active);
-                button.classList.toggle('dark:bg-slate-800', active);
-                button.classList.toggle('dark:text-blue-300', active);
-                button.classList.toggle('text-slate-500', !active && !iconButton);
-                button.classList.toggle('hover:text-slate-800', !active && !disabled && !iconButton);
-                button.classList.toggle('dark:text-slate-400', !active && !iconButton);
-                button.classList.toggle('dark:hover:text-white', !active && !disabled && !iconButton);
-                button.classList.toggle('text-white/70', !active && iconButton);
-                button.classList.toggle('hover:text-white', !active && !disabled && iconButton);
-            });
+        function updateCameraToggle(disabled = false) {
+            if (!cameraToggleButton) return;
+
+            const targetLabel =
+                getCameraTargetLabel(getOppositeFacingMode());
+
+            cameraToggleButton.disabled = disabled || !attendanceCanScan;
+            cameraToggleButton.setAttribute('aria-label', `Ganti ke ${targetLabel}`);
+            cameraToggleButton.title = `Ganti ke ${targetLabel}`;
+            cameraToggleIcon?.classList.toggle('animate-spin', switchingCamera);
+        }
+
+        function updateMobileScanToggle() {
+            if (!mobileScanToggle) return;
+
+            const stopMode =
+                scanActive || scanStarting;
+
+            mobileScanToggle.disabled =
+                !attendanceCanScan || scanStarting;
+
+            mobileScanToggle.classList.toggle('hk-btn-primary', !stopMode);
+            mobileScanToggle.classList.toggle('hk-btn-danger', stopMode);
+
+            mobileScanStartIcon?.classList.toggle('hidden', stopMode);
+            mobileScanStopIcon?.classList.toggle('hidden', !stopMode);
+
+            if (mobileScanToggleText) {
+                mobileScanToggleText.textContent = !attendanceCanScan
+                    ? 'Presensi Ditutup'
+                    : (stopMode ? 'Hentikan Pemindaian' : 'Mulai Pemindaian');
+            }
         }
 
         function setPreferredFacingMode(mode) {
@@ -493,15 +531,17 @@
                 : 'user';
 
             localStorage.setItem(cameraModeStorageKey, preferredFacingMode);
-            updateCameraModeButtons(Boolean(video.srcObject) || !attendanceCanScan);
+            updateCameraToggle(switchingCamera || !attendanceCanScan);
         }
 
         function setScanningState(active) {
             const classSelect = getClassSelect();
 
+            scanActive = active;
             startScan.disabled = active || !attendanceCanScan;
             stopScan.disabled = !active;
-            updateCameraModeButtons(active || !attendanceCanScan);
+            updateCameraToggle(!attendanceCanScan);
+            updateMobileScanToggle();
 
             if (classSelect) {
                 classSelect.disabled = active;
@@ -706,19 +746,65 @@
         }
 
         setScanningState(false);
-        updateCameraModeButtons(!attendanceCanScan);
+        updateCameraToggle(!attendanceCanScan);
+        updateMobileScanToggle();
 
-        cameraModeButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                if (video.srcObject) {
-                    return;
+        async function toggleCameraFacingMode() {
+            if (!attendanceCanScan || switchingCamera) {
+                return;
+            }
+
+            const previousFacingMode =
+                preferredFacingMode;
+
+            const nextFacingMode =
+                getOppositeFacingMode();
+
+            setPreferredFacingMode(nextFacingMode);
+
+            if (!video.srcObject) {
+                setStatus(`${getCameraTargetLabel(nextFacingMode)} dipilih`, 'slate');
+                return;
+            }
+
+            switchingCamera = true;
+            processing = true;
+            updateCameraToggle(true);
+            setStatus('Mengganti kamera', 'blue');
+
+            stopCameraStream();
+
+            try {
+                await startCameraStream();
+
+                setStatus('Pemindaian aktif', 'green');
+            } catch (error) {
+                setPreferredFacingMode(previousFacingMode);
+
+                try {
+                    await startCameraStream();
+                    setStatus('Pemindaian aktif', 'green');
+                } catch (restoreError) {
+                    clearInterval(scanInterval);
+                    scanInterval = null;
+                    setScanningState(false);
+                    setStatus('Kamera gagal aktif', 'red');
                 }
 
-                setPreferredFacingMode(button.dataset.faceAttendanceCamera);
-            });
-        });
+                showToast(
+                    'error',
+                    error?.message || 'Kamera gagal diganti.'
+                );
+            } finally {
+                switchingCamera = false;
+                processing = false;
+                updateCameraToggle(!attendanceCanScan);
+            }
+        }
 
-        startScan.addEventListener('click', async () => {
+        cameraToggleButton?.addEventListener('click', toggleCameraFacingMode);
+
+        async function startScanning() {
 
             if (!attendanceCanScan) {
 
@@ -753,7 +839,10 @@
 
             startScan.disabled = true;
             stopScan.disabled = true;
-            updateCameraModeButtons(true);
+            scanStarting = true;
+            const sessionId = ++scanSessionId;
+            updateMobileScanToggle();
+            updateCameraToggle(true);
 
             try {
 
@@ -767,11 +856,20 @@
                 await startCameraStream();
 
                 setStatus('Kamera aktif', 'green');
+                scanStarting = false;
                 setScanningState(true);
 
                 await loadModels();
 
+                if (sessionId !== scanSessionId || !video.srcObject) {
+                    return;
+                }
+
                 await loadDescriptors(classId);
+
+                if (sessionId !== scanSessionId || !video.srcObject) {
+                    return;
+                }
 
                 if (labeledDescriptors.length === 0) {
 
@@ -786,6 +884,7 @@
 
                     stopCameraStream();
 
+                    scanStarting = false;
                     setScanningState(false);
 
                     return;
@@ -901,6 +1000,7 @@
 
                 stopCameraStream();
 
+                scanStarting = false;
                 setScanningState(false);
 
                 setStatus('Pemindaian gagal dimulai', 'red');
@@ -912,9 +1012,11 @@
 
             }
 
-        });
+        }
 
-        stopScan.addEventListener('click', () => {
+        function stopScanning() {
+
+            scanSessionId++;
 
             clearInterval(scanInterval);
             scanInterval = null;
@@ -922,6 +1024,7 @@
             stopCameraStream();
             clearFaceOverlay();
 
+            scanStarting = false;
             setScanningState(false);
 
             setStatus('Pemindaian dihentikan', 'slate');
@@ -931,6 +1034,18 @@
                 'Pemindaian dihentikan.'
             );
 
+        }
+
+        startScan.addEventListener('click', startScanning);
+        stopScan.addEventListener('click', stopScanning);
+
+        mobileScanToggle?.addEventListener('click', () => {
+            if (scanActive) {
+                stopScanning();
+                return;
+            }
+
+            startScanning();
         });
 
     }
