@@ -1114,9 +1114,6 @@
                 if (!faceOverlay) return;
 
                 const context = faceOverlay.getContext('2d');
-                const boxX = isFrontCamera()
-                    ? displaySize.width - box.x - box.width
-                    : box.x;
 
                 context.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
             }
@@ -1139,6 +1136,9 @@
                 if (!box) return;
 
                 const context = faceOverlay.getContext('2d');
+                const boxX = isFrontCamera()
+                    ? displaySize.width - box.x - box.width
+                    : box.x;
 
                 context.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
                 context.lineWidth = 3;
