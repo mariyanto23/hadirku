@@ -1,4 +1,4 @@
-<div x-data="{ classPickerOpen: false }">
+<div x-data="{ classPickerOpen: false }" class="max-w-full overflow-x-hidden">
     @php
         $availability = $attendanceAvailability ?? [
             'can_scan' => true,
@@ -23,9 +23,9 @@
         };
     @endphp
 
-    <div class="hk-page">
+    <div class="hk-page max-w-full overflow-x-hidden">
 
-        <section class="hk-card p-5 sm:p-6">
+        <section class="hk-card min-w-0 overflow-hidden p-5 sm:p-6">
             <div class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <div class="text-sm font-bold uppercase tracking-wide text-blue-600 dark:text-blue-300">
@@ -185,9 +185,9 @@
             @endif
         </section>
 
-        <section class="grid gap-6 xl:grid-cols-[1.45fr_0.75fr]">
+        <section class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,0.75fr)]">
 
-            <section class="hk-card p-4 sm:p-6" wire:ignore>
+            <section class="hk-card min-w-0 overflow-hidden p-3 sm:p-6" wire:ignore>
                 <div class="relative overflow-hidden rounded-[1.75rem] border border-slate-800 bg-slate-950 shadow-glow">
                     <video
                         id="video"
@@ -226,10 +226,39 @@
                         <span id="scanDot" class="mr-2 inline-block h-2 w-2 rounded-full bg-slate-400"></span>
                         <span id="scanStatus">Siap memindai</span>
                     </div>
+
+                    <div class="absolute bottom-4 right-4 grid grid-cols-2 gap-1 rounded-2xl bg-slate-950/70 p-1 shadow-lg ring-1 ring-white/15 backdrop-blur md:hidden">
+                        <button
+                            type="button"
+                            data-face-attendance-camera="user"
+                            aria-label="Gunakan kamera depan"
+                            title="Kamera depan"
+                            class="flex h-10 w-10 items-center justify-center rounded-xl text-white/70 transition disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 19a6 6 0 0 1 12 0" />
+                            </svg>
+                        </button>
+
+                        <button
+                            type="button"
+                            data-face-attendance-camera="environment"
+                            aria-label="Gunakan kamera belakang"
+                            title="Kamera belakang"
+                            class="flex h-10 w-10 items-center justify-center rounded-xl text-white/70 transition disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h4l2-3h4l2 3h4v13H4V7Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m16 12 2 2-2 2" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18 14h-5a3 3 0 0 1-3-3" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="mt-5 grid gap-3 lg:grid-cols-[minmax(0,18rem)_1fr]">
-                    <div class="grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950/50">
+                <div class="mt-5 grid gap-3 md:grid-cols-[minmax(0,18rem)_1fr]">
+                    <div class="hidden grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950/50 md:grid">
                         <button
                             id="faceAttendanceCameraUser"
                             type="button"
@@ -277,7 +306,7 @@
                 </div>
             </section>
 
-            <aside class="hk-card p-5 sm:p-6">
+            <aside class="hk-card min-w-0 overflow-hidden p-5 sm:p-6">
                 <div class="flex items-center justify-between gap-4">
                     <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">
                         Presensi Terbaru
@@ -440,16 +469,21 @@
                 const active =
                     button.dataset.faceAttendanceCamera === preferredFacingMode;
 
+                const iconButton =
+                    button.classList.contains('h-10');
+
                 button.disabled = disabled;
                 button.classList.toggle('bg-white', active);
                 button.classList.toggle('text-blue-600', active);
                 button.classList.toggle('shadow-sm', active);
                 button.classList.toggle('dark:bg-slate-800', active);
                 button.classList.toggle('dark:text-blue-300', active);
-                button.classList.toggle('text-slate-500', !active);
-                button.classList.toggle('hover:text-slate-800', !active && !disabled);
-                button.classList.toggle('dark:text-slate-400', !active);
-                button.classList.toggle('dark:hover:text-white', !active && !disabled);
+                button.classList.toggle('text-slate-500', !active && !iconButton);
+                button.classList.toggle('hover:text-slate-800', !active && !disabled && !iconButton);
+                button.classList.toggle('dark:text-slate-400', !active && !iconButton);
+                button.classList.toggle('dark:hover:text-white', !active && !disabled && !iconButton);
+                button.classList.toggle('text-white/70', !active && iconButton);
+                button.classList.toggle('hover:text-white', !active && !disabled && iconButton);
             });
         }
 
