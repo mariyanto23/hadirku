@@ -484,7 +484,7 @@
                                         </div>
 
                                         <div x-show="faceRegistrationMode === 'camera'" class="mt-4">
-                                            <div class="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 shadow-glow">
+                                            <div class="relative overflow-hidden rounded-[1.75rem] border border-slate-800 bg-slate-950 shadow-glow">
                                                 <video
                                                     id="video"
                                                     autoplay
@@ -511,26 +511,48 @@
                                                         </svg>
                                                     </div>
                                                     <div class="mt-4 text-lg font-extrabold">
-                                                        Kamera tidak aktif
+                                                        Kamera belum aktif
                                                     </div>
                                                     <div class="mt-1 text-sm font-semibold text-slate-300">
                                                         Klik tombol di bawah untuk memulai
                                                     </div>
                                                 </div>
 
-                                                <div class="pointer-events-none absolute inset-3 rounded-[1.15rem] border border-white/20"></div>
+                                                <div class="pointer-events-none absolute inset-4 rounded-[1.35rem] border border-white/20"></div>
 
                                                 <div class="absolute left-4 top-4 rounded-2xl bg-slate-950/70 px-4 py-2 text-sm font-bold text-white backdrop-blur">
                                                     <span id="modelStatus">Menunggu model</span>
                                                 </div>
+
+                                                <button
+                                                    type="button"
+                                                    data-face-registration-camera-toggle
+                                                    aria-label="Balik kamera"
+                                                    title="Balik kamera"
+                                                    class="absolute bottom-4 right-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-950/60 text-white shadow-lg ring-1 ring-white/20 backdrop-blur transition hover:bg-slate-950/80 disabled:cursor-not-allowed disabled:opacity-50 md:hidden"
+                                                >
+                                                    <svg
+                                                        data-face-registration-camera-toggle-icon
+                                                        class="h-7 w-7"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        stroke-width="2.25"
+                                                    >
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 12a8 8 0 0 1 13.66-5.66" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.66 6.34H14m3.66 0V2.68" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 12A8 8 0 0 1 6.34 17.66" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.34 17.66H10m-3.66 0v3.66" />
+                                                    </svg>
+                                                </button>
                                             </div>
 
                                             <div id="captureStatus" class="sr-only" aria-live="polite">
                                                 Kamera belum aktif
                                             </div>
 
-                                            <div class="mt-4 grid gap-3 lg:grid-cols-[minmax(0,18rem)_1fr]">
-                                                <div class="grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950/50">
+                                            <div class="mt-4 grid gap-3 md:grid-cols-[minmax(0,18rem)_1fr]">
+                                                <div class="hidden grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950/50 md:grid">
                                                     <button
                                                         type="button"
                                                         data-face-registration-camera="user"
@@ -771,15 +793,52 @@
                                 class="pointer-events-none absolute inset-0 hidden bg-white/25"
                             ></div>
 
+                            <div id="cameraInactiveState" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 px-6 text-center text-white">
+                                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-white">
+                                    <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h4l2-3h4l2 3h4v13H4V7Z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m3 3 18 18" />
+                                    </svg>
+                                </div>
+                                <div class="mt-4 text-lg font-extrabold">
+                                    Kamera belum aktif
+                                </div>
+                                <div class="mt-1 text-sm font-semibold text-slate-300">
+                                    Klik tombol di bawah untuk memulai
+                                </div>
+                            </div>
+
                             <div class="pointer-events-none absolute inset-4 rounded-[1.35rem] border border-white/20"></div>
 
                             <div class="absolute left-4 top-4 rounded-2xl bg-slate-950/70 px-4 py-2 text-sm font-bold text-white backdrop-blur">
                                 <span id="modelStatus">Menunggu model</span>
                             </div>
+
+                            <button
+                                type="button"
+                                data-face-registration-camera-toggle
+                                aria-label="Balik kamera"
+                                title="Balik kamera"
+                                class="absolute bottom-4 right-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-950/60 text-white shadow-lg ring-1 ring-white/20 backdrop-blur transition hover:bg-slate-950/80 disabled:cursor-not-allowed disabled:opacity-50 md:hidden"
+                            >
+                                <svg
+                                    data-face-registration-camera-toggle-icon
+                                    class="h-7 w-7"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.25"
+                                >
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 12a8 8 0 0 1 13.66-5.66" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.66 6.34H14m3.66 0V2.68" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 12A8 8 0 0 1 6.34 17.66" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.34 17.66H10m-3.66 0v3.66" />
+                                </svg>
+                            </button>
                         </div>
 
-                        <div class="mt-5 grid gap-3 lg:grid-cols-[minmax(0,18rem)_1fr]">
-                            <div class="grid grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950/50">
+                        <div class="mt-5 grid gap-3 md:grid-cols-[minmax(0,18rem)_1fr]">
+                            <div class="hidden grid-cols-2 gap-1 rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950/50 md:grid">
                                 <button
                                     type="button"
                                     data-face-registration-camera="user"
@@ -897,6 +956,12 @@
             const cameraInactiveState =
                 document.getElementById('cameraInactiveState');
 
+            const cameraToggleButton =
+                document.querySelector('[data-face-registration-camera-toggle]');
+
+            const cameraToggleIcon =
+                document.querySelector('[data-face-registration-camera-toggle-icon]');
+
             const cameraModeButtons =
                 document.querySelectorAll('[data-face-registration-camera]');
 
@@ -951,6 +1016,8 @@
             let lastFaceDetectedAt = 0;
 
             let captureProcessing = false;
+
+            let switchingCamera = false;
 
             const cameraModeStorageKey =
                 'hadirkuFaceRegistrationFacingMode';
@@ -1296,6 +1363,32 @@
                 });
             }
 
+            function getOppositeFacingMode() {
+                return preferredFacingMode === 'environment'
+                    ? 'user'
+                    : 'environment';
+            }
+
+            function getCameraTargetLabel(mode) {
+                return mode === 'environment'
+                    ? 'kamera belakang'
+                    : 'kamera depan';
+            }
+
+            function updateCameraToggle(disabled = false) {
+                if (!cameraToggleButton) return;
+
+                const targetLabel =
+                    getCameraTargetLabel(getOppositeFacingMode());
+
+                cameraToggleButton.disabled =
+                    disabled || !video.srcObject;
+
+                cameraToggleButton.setAttribute('aria-label', `Ganti ke ${targetLabel}`);
+                cameraToggleButton.title = `Ganti ke ${targetLabel}`;
+                cameraToggleIcon?.classList.toggle('animate-spin', switchingCamera);
+            }
+
             function setPreferredFacingMode(mode) {
                 preferredFacingMode = mode === 'environment'
                     ? 'environment'
@@ -1303,25 +1396,41 @@
 
                 localStorage.setItem(cameraModeStorageKey, preferredFacingMode);
                 updateCameraModeButtons(Boolean(video.srcObject));
+                updateCameraToggle(switchingCamera);
             }
 
-            async function getCameraStream() {
+            function getCameraConstraints(facingMode, strictFacingMode = false) {
+                const forcePortrait =
+                    facingMode === 'environment'
+                    || window.matchMedia('(max-width: 767px)').matches;
+
+                return {
+                    width: {
+                        ideal: forcePortrait ? 720 : 640,
+                    },
+                    height: {
+                        ideal: forcePortrait ? 960 : 480,
+                    },
+                    aspectRatio: {
+                        ideal: forcePortrait ? 3 / 4 : 4 / 3,
+                    },
+                    facingMode: strictFacingMode
+                        ? { exact: facingMode }
+                        : { ideal: facingMode },
+                };
+            }
+
+            async function getCameraStream(options = {}) {
                 const facingMode =
                     preferredFacingMode === 'environment' ? 'environment' : 'user';
 
+                const strictFacingMode =
+                    Boolean(options.strictFacingMode);
+
                 try {
                     return await navigator.mediaDevices.getUserMedia({
-                        video: {
-                            width: {
-                                ideal: facingMode === 'environment' ? 720 : 640,
-                            },
-                            height: {
-                                ideal: facingMode === 'environment' ? 960 : 480,
-                            },
-                            facingMode: {
-                                ideal: facingMode,
-                            },
-                        },
+                        video:
+                            getCameraConstraints(facingMode, strictFacingMode),
                         audio: false,
                     });
                 } catch (error) {
@@ -1354,6 +1463,7 @@
                     : 'Aktifkan Kamera';
 
                 updateCameraModeButtons(active);
+                updateCameraToggle(!active);
 
             }
 
@@ -1390,6 +1500,7 @@
             window.hadirkuStopFaceRegistrationCamera = stopCameraStream;
 
             updateCameraModeButtons(Boolean(video.srcObject));
+            updateCameraToggle(!video.srcObject);
 
             cameraModeButtons.forEach(button => {
                 button.addEventListener('click', () => {
@@ -1400,6 +1511,85 @@
                     setPreferredFacingMode(button.dataset.faceRegistrationCamera);
                 });
             });
+
+            async function toggleCameraFacingMode() {
+                if (switchingCamera || !video.srcObject) {
+                    return;
+                }
+
+                const previousFacingMode =
+                    preferredFacingMode;
+
+                const nextFacingMode =
+                    getOppositeFacingMode();
+
+                switchingCamera = true;
+                setPreferredFacingMode(nextFacingMode);
+                updateCameraToggle(true);
+                updateCameraModeButtons(true);
+                setCaptureStatus('Mengganti kamera');
+
+                stopFacePreviewLoop();
+
+                const currentStream =
+                    video.srcObject;
+
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => {
+                        track.stop();
+                    });
+                }
+
+                video.srcObject = null;
+
+                try {
+                    const stream =
+                        await getCameraStream({
+                            strictFacingMode: true,
+                        });
+
+                    video.srcObject = stream;
+
+                    await video.play();
+                    await loadModels();
+
+                    setCameraButtonActive(true);
+                    startFacePreviewLoop();
+                    setCaptureStatus('Kamera aktif - mencari wajah');
+                } catch (error) {
+                    setPreferredFacingMode(previousFacingMode);
+
+                    try {
+                        const stream =
+                            await getCameraStream({
+                                strictFacingMode: true,
+                            });
+
+                        video.srcObject = stream;
+
+                        await video.play();
+                        await loadModels();
+
+                        setCameraButtonActive(true);
+                        startFacePreviewLoop();
+                        setCaptureStatus('Kamera aktif - mencari wajah');
+                    } catch (restoreError) {
+                        setCameraButtonActive(false);
+                        setCaptureStatus('Kamera gagal aktif');
+                    }
+
+                    showToast(
+                        'error',
+                        error?.message || 'Kamera gagal diganti.'
+                    );
+                } finally {
+                    switchingCamera = false;
+                    updateCameraToggle(!video.srcObject);
+                    updateCameraModeButtons(Boolean(video.srcObject));
+                }
+            }
+
+            cameraToggleButton?.addEventListener('click', toggleCameraFacingMode);
 
             loadModels().catch(error => {
 
@@ -1512,6 +1702,7 @@
 
                     startCamera.disabled = true;
                     updateCameraModeButtons(true);
+                    updateCameraToggle(true);
                     cameraButtonText.textContent = 'Mengaktifkan...';
 
                     setCaptureStatus('Meminta akses kamera');

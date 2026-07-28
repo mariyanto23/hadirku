@@ -497,7 +497,12 @@
             const targetLabel =
                 getCameraTargetLabel(getOppositeFacingMode());
 
-            cameraToggleButton.disabled = disabled || !attendanceCanScan;
+            const cameraReady =
+                Boolean(video.srcObject) && scanActive && !scanStarting;
+
+            cameraToggleButton.disabled =
+                disabled || !attendanceCanScan || !cameraReady;
+
             cameraToggleButton.setAttribute('aria-label', `Ganti ke ${targetLabel}`);
             cameraToggleButton.title = `Ganti ke ${targetLabel}`;
             cameraToggleIcon?.classList.toggle('animate-spin', switchingCamera);
@@ -682,7 +687,28 @@
 
         }
 
-        async function startCameraStream() {
+        function getCameraConstraints(facingMode, strictFacingMode = false) {
+            const forcePortrait =
+                facingMode === 'environment'
+                || window.matchMedia('(max-width: 767px)').matches;
+
+            return {
+                width: {
+                    ideal: forcePortrait ? 720 : 640,
+                },
+                height: {
+                    ideal: forcePortrait ? 960 : 480,
+                },
+                aspectRatio: {
+                    ideal: forcePortrait ? 3 / 4 : 4 / 3,
+                },
+                facingMode: strictFacingMode
+                    ? { exact: facingMode }
+                    : { ideal: facingMode },
+            };
+        }
+
+        async function startCameraStream(options = {}) {
 
             if (!navigator.mediaDevices?.getUserMedia) {
                 throw new Error('Browser tidak mendukung akses kamera.');
@@ -691,21 +717,15 @@
             const facingMode =
                 preferredFacingMode === 'environment' ? 'environment' : 'user';
 
+            const strictFacingMode =
+                Boolean(options.strictFacingMode);
+
             try {
                 const stream =
                     await navigator.mediaDevices.getUserMedia({
 
-                        video: {
-                            width: {
-                                ideal: facingMode === 'environment' ? 720 : 640,
-                            },
-                            height: {
-                                ideal: facingMode === 'environment' ? 960 : 480,
-                            },
-                            facingMode: {
-                                ideal: facingMode,
-                            },
-                        },
+                        video:
+                            getCameraConstraints(facingMode, strictFacingMode),
 
                         audio: false,
 
@@ -750,7 +770,7 @@
         updateMobileScanToggle();
 
         async function toggleCameraFacingMode() {
-            if (!attendanceCanScan || switchingCamera) {
+            if (!attendanceCanScan || switchingCamera || !scanActive || !video.srcObject) {
                 return;
             }
 
@@ -762,11 +782,6 @@
 
             setPreferredFacingMode(nextFacingMode);
 
-            if (!video.srcObject) {
-                setStatus(`${getCameraTargetLabel(nextFacingMode)} dipilih`, 'slate');
-                return;
-            }
-
             switchingCamera = true;
             processing = true;
             updateCameraToggle(true);
@@ -775,14 +790,18 @@
             stopCameraStream();
 
             try {
-                await startCameraStream();
+                await startCameraStream({
+                    strictFacingMode: true,
+                });
 
                 setStatus('Pemindaian aktif', 'green');
             } catch (error) {
                 setPreferredFacingMode(previousFacingMode);
 
                 try {
-                    await startCameraStream();
+                    await startCameraStream({
+                        strictFacingMode: true,
+                    });
                     setStatus('Pemindaian aktif', 'green');
                 } catch (restoreError) {
                     clearInterval(scanInterval);
