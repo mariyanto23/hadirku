@@ -97,6 +97,8 @@ Registrasi wajah dapat dilakukan oleh siswa untuk dirinya sendiri, atau oleh adm
 
 Guru membuka Face Attendance, memilih kelas, lalu sistem memuat descriptor kelas dari endpoint `guru/class-descriptors/{classId}`. Browser melakukan matching wajah dengan threshold dari pengaturan. Jika wajah dikenali dan siswa belum punya presensi hari ini, Livewire menyimpan `Attendance`.
 
+Pengecekan presensi ganda pada Face Attendance harus selalu berbasis tanggal lokal aplikasi (`Asia/Jakarta`) dalam format tanggal eksplisit `YYYY-MM-DD`. Presensi terlambat pada 28 Juli 2026, misalnya pukul 15:43, tidak boleh membuat siswa dianggap sudah presensi pada 29 Juli 2026. Namun presensi kedua pada tanggal yang sama tetap harus ditolak.
+
 Status presensi otomatis:
 
 - `hadir` jika scan sebelum atau sama dengan `late_after`
@@ -208,6 +210,7 @@ Peninjauan berjalan halaman demi halaman dari admin, guru, lalu siswa.
   - Pada mobile, kontrol `Mulai Pemindaian` dan `Hentikan Pemindaian` digabung menjadi satu tombol toggle. Setelah ditekan untuk mulai, teks langsung berubah menjadi `Hentikan Pemindaian` tetapi tombol tetap nonaktif sampai kamera aktif; setelah pemindaian aktif, tombol bisa dipakai untuk menghentikan pemindaian.
   - Jika presensi hari ini ditutup karena Kalender Akademik (`Presensi Tutup`) atau karena bukan `Hari Sekolah`, halaman Presensi Wajah menampilkan banner status sejak awal, tombol `Mulai Pemindaian` berubah menjadi `Presensi Ditutup`, dan kamera tidak perlu dinyalakan.
   - Jika Kalender Akademik membuka presensi sebagai pengecualian (`Presensi Buka`), halaman menampilkan banner info bahwa presensi dibuka untuk kegiatan sekolah dan pemindaian tetap aktif.
+  - Jalur simpan presensi memakai satu sumber waktu (`now()`) untuk tanggal, jam, cek libur, cek hari sekolah, cek duplikat, dan data yang disimpan. Tes regresi memastikan presensi terlambat kemarin tidak memblokir presensi hari ini, sementara presensi ganda pada tanggal yang sama tetap ditolak.
 - Admin Izin/Sakit sudah direview dan diperbaiki:
   - Input Izin/Sakit manual pindah ke modal.
   - Edit presensi manual memakai modal yang sama.

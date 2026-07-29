@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Guru;
 
+use App\Models\AcademicHoliday;
 use App\Models\Attendance;
 use App\Models\AttendanceSetting;
-use App\Models\AcademicHoliday;
 use App\Models\SchoolClass;
 use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +24,9 @@ class FaceAttendance extends Component
         $confidence,
         $classId
     ): array {
+        $attendanceNow = now();
+        $attendanceDate = $attendanceNow->toDateString();
+        $attendanceTime = $attendanceNow->format('H:i:s');
 
         $studentExists = Student::query()
             ->whereKey($studentId)
@@ -37,7 +40,7 @@ class FaceAttendance extends Component
             ];
         }
 
-        $blockingHoliday = AcademicHoliday::blockingAttendanceOn(today());
+        $blockingHoliday = AcademicHoliday::blockingAttendanceOn($attendanceDate);
 
         if ($blockingHoliday) {
             return [
@@ -47,9 +50,9 @@ class FaceAttendance extends Component
         }
 
         $settings = AttendanceSetting::current();
-        $allowingHoliday = AcademicHoliday::allowingAttendanceOn(today());
+        $allowingHoliday = AcademicHoliday::allowingAttendanceOn($attendanceDate);
 
-        if (! $settings->isSchoolDay(today()) && ! $allowingHoliday) {
+        if (! $settings->isSchoolDay($attendanceDate) && ! $allowingHoliday) {
             return [
                 'saved' => false,
                 'message' => 'Presensi tidak dibuka karena hari ini bukan hari sekolah.',
@@ -58,7 +61,7 @@ class FaceAttendance extends Component
 
         $alreadyExists = Attendance::query()
             ->where('student_id', $studentId)
-            ->whereDate('attendance_date', today())
+            ->whereDate('attendance_date', $attendanceDate)
             ->exists();
 
         if ($alreadyExists) {
@@ -68,15 +71,15 @@ class FaceAttendance extends Component
             ];
         }
 
-        $status = now()->format('H:i:s')
+        $status = $attendanceTime
           > $settings->late_after
           ? 'terlambat'
           : 'hadir';
 
         Attendance::create([
             'student_id' => $studentId,
-            'attendance_date' => today(),
-            'attendance_time' => now()->format('H:i:s'),
+            'attendance_date' => $attendanceDate,
+            'attendance_time' => $attendanceTime,
             'status' => $status,
             'confidence_score' => $confidence,
             'match_threshold_used' => $settings->face_match_threshold,
@@ -94,6 +97,8 @@ class FaceAttendance extends Component
 
     public function render()
     {
+        $attendanceDate = today()->toDateString();
+
         return view('livewire.guru.face-attendance', [
             'classes' => SchoolClass::query()
                 ->orderBy('name')
@@ -106,7 +111,7 @@ class FaceAttendance extends Component
                     'student.user',
                     'student.class',
                 ])
-                ->whereDate('attendance_date', today())
+                ->whereDate('attendance_date', $attendanceDate)
                 ->where('approval_status', '!=', 'pending')
                 ->latest()
                 ->limit(8)
@@ -141,13 +146,14 @@ class FaceAttendance extends Component
             'ready_students' => $students
                 ->where('descriptors_count', '>=', 3)
                 ->count(),
-                'descriptors' => $students->sum('descriptors_count'),
+            'descriptors' => $students->sum('descriptors_count'),
         ];
     }
 
     protected function attendanceAvailability(): array
     {
-        $blockingHoliday = AcademicHoliday::blockingAttendanceOn(today());
+        $attendanceDate = today()->toDateString();
+        $blockingHoliday = AcademicHoliday::blockingAttendanceOn($attendanceDate);
 
         if ($blockingHoliday) {
             return [
@@ -160,9 +166,9 @@ class FaceAttendance extends Component
         }
 
         $settings = AttendanceSetting::current();
-        $allowingHoliday = AcademicHoliday::allowingAttendanceOn(today());
+        $allowingHoliday = AcademicHoliday::allowingAttendanceOn($attendanceDate);
 
-        if (! $settings->isSchoolDay(today()) && ! $allowingHoliday) {
+        if (! $settings->isSchoolDay($attendanceDate) && ! $allowingHoliday) {
             return [
                 'can_scan' => false,
                 'tone' => 'slate',

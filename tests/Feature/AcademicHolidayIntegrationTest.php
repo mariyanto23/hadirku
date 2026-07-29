@@ -260,6 +260,114 @@ class AcademicHolidayIntegrationTest extends TestCase
         ]);
     }
 
+    public function test_yesterday_late_attendance_does_not_block_today_face_attendance(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-29 08:15:00'));
+
+        Role::create(['name' => 'guru']);
+
+        AttendanceSetting::current()->update([
+            'late_after' => '07:00:00',
+        ]);
+
+        $class = SchoolClass::create(['name' => 'Kelas 1']);
+        $guru = User::factory()->create(['default_class_id' => $class->id]);
+        $guru->assignRole('guru');
+
+        $studentUser = User::factory()->create(['username' => '1002']);
+        $student = Student::create([
+            'user_id' => $studentUser->id,
+            'class_id' => $class->id,
+            'nis' => '1002',
+            'gender' => 'Perempuan',
+        ]);
+
+        Attendance::create([
+            'student_id' => $student->id,
+            'attendance_date' => '2026-07-28',
+            'attendance_time' => '15:43:00',
+            'status' => 'terlambat',
+            'confidence_score' => 0.91,
+            'match_threshold_used' => 0.5,
+            'approval_status' => 'approved',
+        ]);
+
+        Livewire::actingAs($guru)
+            ->test(FaceAttendance::class)
+            ->call('saveAttendance', $student->id, 0.88, $class->id)
+            ->assertReturned([
+                'saved' => true,
+                'message' => 'Presensi berhasil disimpan.',
+                'status' => 'terlambat',
+            ]);
+
+        $this->assertSame(
+            1,
+            Attendance::query()
+                ->where('student_id', $student->id)
+                ->whereDate('attendance_date', '2026-07-28')
+                ->where('attendance_time', '15:43:00')
+                ->where('status', 'terlambat')
+                ->count()
+        );
+
+        $this->assertSame(
+            1,
+            Attendance::query()
+                ->where('student_id', $student->id)
+                ->whereDate('attendance_date', '2026-07-29')
+                ->where('attendance_time', '08:15:00')
+                ->where('status', 'terlambat')
+                ->where('approval_status', 'approved')
+                ->count()
+        );
+    }
+
+    public function test_today_attendance_still_blocks_duplicate_face_attendance(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-29 08:15:00'));
+
+        Role::create(['name' => 'guru']);
+
+        $class = SchoolClass::create(['name' => 'Kelas 1']);
+        $guru = User::factory()->create(['default_class_id' => $class->id]);
+        $guru->assignRole('guru');
+
+        $studentUser = User::factory()->create(['username' => '1003']);
+        $student = Student::create([
+            'user_id' => $studentUser->id,
+            'class_id' => $class->id,
+            'nis' => '1003',
+            'gender' => 'Laki-laki',
+        ]);
+
+        Attendance::create([
+            'student_id' => $student->id,
+            'attendance_date' => '2026-07-29',
+            'attendance_time' => '07:15:00',
+            'status' => 'terlambat',
+            'confidence_score' => 0.91,
+            'match_threshold_used' => 0.5,
+            'approval_status' => 'approved',
+        ]);
+
+        Livewire::actingAs($guru)
+            ->test(FaceAttendance::class)
+            ->call('saveAttendance', $student->id, 0.88, $class->id)
+            ->assertReturned([
+                'saved' => false,
+                'message' => 'Siswa ini sudah memiliki presensi hari ini.',
+            ]);
+
+        $this->assertSame(
+            1,
+            Attendance::query()
+                ->where('student_id', $student->id)
+                ->whereDate('attendance_date', '2026-07-29')
+                ->count()
+        );
+    }
+
     public function test_auto_alpha_skips_non_school_day(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-06-07 12:00:00'));

@@ -167,6 +167,7 @@ Saat membuat kode untuk project ini:
 ## Aturan Bisnis yang Perlu Dijaga
 
 - Satu siswa hanya boleh punya satu presensi per tanggal.
+- Pengecekan duplikat Face Attendance harus memakai tanggal lokal aplikasi yang eksplisit (`today()->toDateString()`/`YYYY-MM-DD`) dan nilai waktu presensi yang sama untuk cek serta simpan. Presensi terlambat kemarin, misalnya 28 Juli 2026 pukul 15:43, tidak boleh dianggap sebagai presensi hari ini, tetapi presensi kedua pada 29 Juli 2026 tetap harus ditolak.
 - Presensi hasil scan langsung `approved`.
 - Izin/sakit dari siswa harus `pending` sampai disetujui atau ditolak.
 - Manual attendance dari admin/guru langsung `approved`, kecuali koreksi status menjadi `alpha`/alpa harus menjadi `rejected`.
@@ -206,6 +207,8 @@ Flow yang harus dipertahankan:
 7. Presensi otomatis tersimpan jika wajah dikenali dan belum absen hari itu.
 8. Sistem menerapkan cooldown anti double scan.
 9. Guru bisa stop scan dan kamera dimatikan.
+
+Tes regresi terkait ada di `tests/Feature/AcademicHolidayIntegrationTest.php`: kasus presensi terlambat kemarin tidak memblokir presensi hari ini dan kasus presensi kedua pada tanggal yang sama tetap ditolak.
 
 ## Flow Registrasi Wajah
 

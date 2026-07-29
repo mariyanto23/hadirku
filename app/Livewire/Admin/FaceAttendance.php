@@ -16,6 +16,8 @@ class FaceAttendance extends GuruFaceAttendance
 
     public function render()
     {
+        $attendanceDate = today()->toDateString();
+
         return view('livewire.guru.face-attendance', [
             'classes' => SchoolClass::query()
                 ->orderBy('name')
@@ -28,7 +30,7 @@ class FaceAttendance extends GuruFaceAttendance
                     'student.user',
                     'student.class',
                 ])
-                ->whereDate('attendance_date', today())
+                ->whereDate('attendance_date', $attendanceDate)
                 ->where('approval_status', '!=', 'pending')
                 ->latest()
                 ->limit(8)
