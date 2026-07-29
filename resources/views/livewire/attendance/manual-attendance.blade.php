@@ -854,6 +854,7 @@
         x-transition.opacity
         x-cloak
         class="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm"
+        style="z-index: 90;"
     >
         <button
             type="button"
