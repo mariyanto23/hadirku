@@ -138,24 +138,25 @@ class FaceAttendance extends Component
             ->where('class_id', $class->id)
             ->with('user')
             ->withCount('descriptors')
-            ->withExists([
-                'attendances as attended_today' => fn ($query) => $query
-                    ->whereDate('attendance_date', $attendanceDate),
-            ])
             ->get();
 
-        $attendedStudents = $students
-            ->filter(fn ($student) => (bool) $student->attended_today);
+        $attendedStudentIds = Attendance::query()
+            ->whereDate('attendance_date', $attendanceDate)
+            ->whereIn('student_id', $students->pluck('id'))
+            ->pluck('student_id')
+            ->unique()
+            ->values()
+            ->all();
 
         $unattendedStudents = $students
-            ->reject(fn ($student) => (bool) $student->attended_today)
+            ->whereNotIn('id', $attendedStudentIds)
             ->sortBy(fn ($student) => $student->user?->name)
             ->values();
 
         return [
             'name' => $class->name,
             'students' => $students->count(),
-            'attended_students' => $attendedStudents->count(),
+            'attended_students' => count($attendedStudentIds),
             'unattended_students' => $unattendedStudents->count(),
             'unattended_list' => $unattendedStudents
                 ->take(8)
