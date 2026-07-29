@@ -90,7 +90,7 @@
                         Rekap
                     </div>
                     <h1 class="mt-1 text-2xl font-extrabold text-slate-900 dark:text-white sm:text-3xl">
-                        Rekap Bulan Ini
+                        Rekap Bulan {{ $monthName }}
                     </h1>
                     <div class="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
                         {{ $monthLabel }}{{ $student?->class ? ' - '.$student->class->name : '' }}
@@ -241,7 +241,7 @@
                         Kalender
                     </div>
                     <h2 class="mt-1 text-xl font-extrabold text-slate-900 dark:text-white sm:text-2xl">
-                        Kalender Bulan Ini
+                        Kalender Bulan {{ $monthName }}
                     </h2>
                 </div>
 

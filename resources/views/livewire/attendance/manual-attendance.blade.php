@@ -1,9 +1,10 @@
 <div
     x-data="{
         formOpen: @entangle('showFormModal'),
-        filterOpen: @entangle('showMobileFilterModal')
+        filterOpen: @entangle('showMobileFilterModal'),
+        detailOpen: @entangle('showAttendanceDetailModal')
     }"
-    x-on:keydown.escape.window="if (formOpen) $wire.closeFormModal(); else if (filterOpen) $wire.closeMobileFilters()"
+    x-on:keydown.escape.window="if (formOpen) $wire.closeFormModal(); else if (filterOpen) $wire.closeMobileFilters(); else if (detailOpen) $wire.closeAttendanceDetail()"
 >
     <div class="hk-page max-w-6xl">
         <section class="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
@@ -317,6 +318,21 @@
                                     Menunggu
                                 @endif
                             </span>
+
+                            @if($attendance->attachment_path)
+                                <a
+                                    href="{{ $attendance->attachmentUrl() }}"
+                                    target="_blank"
+                                    rel="noopener"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 transition hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30"
+                                    title="Lihat lampiran"
+                                    aria-label="Lihat lampiran"
+                                >
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
+                                    </svg>
+                                </a>
+                            @endif
                         </div>
 
                         <div class="mt-3 rounded-2xl border border-slate-100 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-900/45">
@@ -360,7 +376,20 @@
                             </div>
                         @endif
 
-                        <div class="mt-4 grid gap-2 {{ $attendance->approval_status === 'pending' ? 'grid-cols-3' : 'grid-cols-1' }}">
+                        <div class="mt-4 grid grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                wire:click="openAttendanceDetail({{ $attendance->id }})"
+                                wire:loading.attr="disabled"
+                                wire:target="openAttendanceDetail({{ $attendance->id }})"
+                                class="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-slate-100 px-3 py-2 text-xs font-extrabold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                            >
+                                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5v14" />
+                                </svg>
+                                Detail
+                            </button>
+
                             @if($attendance->approval_status === 'pending')
                                 <button
                                     type="button"
@@ -588,6 +617,21 @@
 
                                 <td class="w-40 px-5 py-4">
                                     <div class="mx-auto flex w-32 flex-wrap justify-center gap-2">
+                                        @if($attendance->attachment_path)
+                                            <a
+                                                href="{{ $attendance->attachmentUrl() }}"
+                                                target="_blank"
+                                                rel="noopener"
+                                                class="flex h-10 w-10 items-center justify-center rounded-2xl text-slate-500 transition hover:bg-blue-50 hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
+                                                title="Lihat lampiran"
+                                                aria-label="Lihat lampiran"
+                                            >
+                                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
+                                                </svg>
+                                            </a>
+                                        @endif
+
                                         @if($attendance->approval_status === 'pending')
                                             <button
                                                 type="button"
@@ -783,6 +827,175 @@
         </div>
     @endif
 
+    @if($showAttendanceDetailModal && $selectedAttendance)
+        @php
+            $detailSource = 'Manual';
+
+            if ($selectedAttendance->requested_by_user_id) {
+                $detailSource = 'Pengajuan';
+            } elseif ($selectedAttendance->confidence_score !== null) {
+                $detailSource = 'Face Scan';
+            } elseif (str_contains((string) $selectedAttendance->notes, 'Alpha otomatis') || str_contains((string) $selectedAttendance->notes, 'Alpa otomatis')) {
+                $detailSource = 'Alpa Otomatis';
+            }
+        @endphp
+
+        <div
+            class="fixed inset-0 z-[80] flex items-end bg-slate-950/60 px-3 pb-3 pt-16 backdrop-blur-sm md:hidden"
+            wire:key="manual-attendance-detail-{{ $selectedAttendance->id }}"
+        >
+            <button
+                type="button"
+                wire:click="closeAttendanceDetail"
+                class="absolute inset-0"
+                aria-label="Tutup detail"
+            ></button>
+
+            <div class="relative max-h-[85vh] w-full overflow-y-auto rounded-3xl border border-white/70 bg-white p-4 shadow-2xl dark:border-slate-800 dark:bg-slate-950">
+                <div class="mx-auto h-1.5 w-12 rounded-full bg-slate-200 dark:bg-slate-800"></div>
+
+                <div class="mt-4 flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <div class="text-sm font-extrabold text-slate-900 dark:text-white">
+                            Detail Izin/Sakit
+                        </div>
+                        <div class="mt-1 truncate text-lg font-extrabold text-slate-900 dark:text-white">
+                            {{ $selectedAttendance->student->user?->name }}
+                        </div>
+                        <div class="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                            NIS {{ $selectedAttendance->student?->nis }} &middot; {{ $selectedAttendance->student->class?->name }}
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        wire:click="closeAttendanceDetail"
+                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 transition hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                        aria-label="Tutup detail"
+                    >
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="mt-5 grid grid-cols-2 gap-2">
+                    <div class="rounded-2xl bg-slate-50 px-3 py-2 dark:bg-slate-900/70">
+                        <div class="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                            Tanggal
+                        </div>
+                        <div class="mt-1 text-sm font-extrabold text-slate-800 dark:text-slate-100">
+                            {{ $selectedAttendance->attendance_date->translatedFormat('d F Y') }}
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl bg-slate-50 px-3 py-2 dark:bg-slate-900/70">
+                        <div class="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                            Jam
+                        </div>
+                        <div class="mt-1 text-sm font-extrabold text-slate-800 dark:text-slate-100">
+                            {{ substr((string) $selectedAttendance->attendance_time, 0, 5) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                    <span class="hk-badge
+                        @if($selectedAttendance->status === 'hadir')
+                            bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300
+                        @elseif($selectedAttendance->status === 'terlambat')
+                            bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300
+                        @elseif($selectedAttendance->status === 'izin')
+                            bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300
+                        @elseif($selectedAttendance->status === 'sakit')
+                            bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300
+                        @else
+                            bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300
+                        @endif
+                    ">
+                        {{ $selectedAttendance->status === 'alpha' ? 'ALPA' : strtoupper($selectedAttendance->status) }}
+                    </span>
+
+                    <span class="hk-badge
+                        @if($selectedAttendance->approval_status === 'approved')
+                            bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300
+                        @elseif($selectedAttendance->approval_status === 'rejected')
+                            bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300
+                        @else
+                            bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300
+                        @endif
+                    ">
+                        @if($selectedAttendance->approval_status === 'approved')
+                            Disetujui
+                        @elseif($selectedAttendance->approval_status === 'rejected')
+                            Ditolak
+                        @else
+                            Menunggu
+                        @endif
+                    </span>
+
+                    <span class="hk-badge bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                        {{ $detailSource }}
+                    </span>
+                </div>
+
+                <div class="mt-3 rounded-2xl border border-slate-100 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-900/45">
+                    <div class="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                        Keterangan
+                    </div>
+                    <div class="mt-1 break-words text-sm font-semibold leading-5 text-slate-600 dark:text-slate-300">
+                        {{ $selectedAttendance->notes ?: '-' }}
+                    </div>
+
+                    @if($selectedAttendance->review_notes)
+                        <div class="mt-2 break-words text-xs font-semibold leading-5 text-rose-600 dark:text-rose-300">
+                            Tinjauan: {{ $selectedAttendance->review_notes }}
+                        </div>
+                    @endif
+                </div>
+
+                @if($selectedAttendance->requestedBy || $selectedAttendance->reviewedBy)
+                    <div class="mt-3 space-y-1 rounded-2xl bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500 dark:bg-slate-900/70 dark:text-slate-400">
+                        @if($selectedAttendance->requestedBy)
+                            <div>Diajukan oleh {{ $selectedAttendance->requestedBy->name }}</div>
+                        @endif
+
+                        @if($selectedAttendance->reviewedBy)
+                            <div>Ditinjau oleh {{ $selectedAttendance->reviewedBy->name }}</div>
+                        @endif
+                    </div>
+                @endif
+
+                <div class="mt-4 grid grid-cols-2 gap-2">
+                    @if($selectedAttendance->attachment_path)
+                        <a
+                            href="{{ $selectedAttendance->attachmentUrl() }}"
+                            target="_blank"
+                            rel="noopener"
+                            class="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-blue-100 px-3 py-2 text-xs font-extrabold text-blue-700 transition hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30"
+                        >
+                            <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
+                            </svg>
+                            Lampiran
+                        </a>
+                    @endif
+
+                    <button
+                        type="button"
+                        wire:click="edit({{ $selectedAttendance->id }})"
+                        class="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-amber-100 px-3 py-2 text-xs font-extrabold text-amber-700 transition hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:bg-amber-500/30 {{ $selectedAttendance->attachment_path ? '' : 'col-span-2' }}"
+                    >
+                        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" />
+                        </svg>
+                        Edit
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div
         x-show="formOpen"
         x-transition.opacity
@@ -907,17 +1120,26 @@
 
                     @if($isEdit && $existingAttachmentPath)
                             <div class="mb-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/70">
+                                <div class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                                    Lampiran Saat Ini
+                                </div>
                                 <a
                                     href="{{ asset('storage/' . $existingAttachmentPath) }}"
                                     target="_blank"
                                     rel="noopener"
-                                    class="inline-flex items-center gap-2 text-sm font-extrabold text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200"
+                                    class="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-2xl bg-blue-100 px-4 py-2 text-sm font-extrabold text-blue-700 transition hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30"
                                 >
                                     <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
                                     </svg>
-                                    {{ $existingAttachmentName ?: 'Lihat Lampiran' }}
+                                    Buka Lampiran
                                 </a>
+
+                                @if($existingAttachmentName)
+                                    <div class="mt-2 truncate text-xs font-bold text-slate-500 dark:text-slate-400">
+                                        {{ $existingAttachmentName }}
+                                    </div>
+                                @endif
 
                                 <label class="mt-3 flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
                                     <input

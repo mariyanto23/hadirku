@@ -79,6 +79,7 @@ class AttendanceReport extends Component
             'student' => auth()->user()?->student?->load('class'),
             'attendances' => $attendances,
             'resultText' => $attendances->total().' data ditemukan',
+            'monthName' => today()->translatedFormat('F'),
             'monthLabel' => today()->translatedFormat('F Y'),
             'summary' => [
                 'present' => (clone $summaryQuery)->where('status', 'hadir')->count(),

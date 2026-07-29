@@ -21,7 +21,7 @@
     } elseif (request()->routeIs('guru.attendance.report')) {
         $pageTitle = 'Rekap Presensi';
     } elseif (request()->routeIs('siswa.attendance.report')) {
-        $pageTitle = 'Rekap Bulan Ini';
+        $pageTitle = 'Rekap Bulan '.today()->translatedFormat('F');
     } elseif (request()->routeIs('admin.manual.attendance') || request()->routeIs('guru.manual.attendance')) {
         $pageTitle = 'Izin/Sakit';
     } elseif (request()->routeIs('admin.face.attendance') || request()->routeIs('guru.face.attendance')) {

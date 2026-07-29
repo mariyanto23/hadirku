@@ -64,6 +64,10 @@ class ManualAttendance extends Component
 
     public bool $showMobileFilterModal = false;
 
+    public ?int $selectedAttendanceId = null;
+
+    public bool $showAttendanceDetailModal = false;
+
     public function mount(): void
     {
         $this->attendance_date = today()->format('Y-m-d');
@@ -146,11 +150,15 @@ class ManualAttendance extends Component
         $this->approvalFilter = 'pending';
         $this->mobileApprovalFilter = 'pending';
         $this->showMobileFilterModal = false;
+        $this->showAttendanceDetailModal = false;
+        $this->selectedAttendanceId = null;
         $this->resetPage();
     }
 
     public function openMobileFilters(): void
     {
+        $this->showAttendanceDetailModal = false;
+        $this->selectedAttendanceId = null;
         $this->mobileClassFilter = $this->classFilter;
         $this->mobileStatusFilter = $this->statusFilter;
         $this->mobileApprovalFilter = $this->approvalFilter;
@@ -194,6 +202,8 @@ class ManualAttendance extends Component
 
     public function openCreateModal(): void
     {
+        $this->showAttendanceDetailModal = false;
+        $this->selectedAttendanceId = null;
         $this->resetForm();
         $this->showFormModal = true;
     }
@@ -352,6 +362,9 @@ class ManualAttendance extends Component
 
     public function edit($id): void
     {
+        $this->showAttendanceDetailModal = false;
+        $this->selectedAttendanceId = null;
+
         $attendance = Attendance::query()
             ->with('student')
             ->findOrFail($id);
@@ -371,6 +384,20 @@ class ManualAttendance extends Component
         $this->showFormModal = true;
 
         $this->resetValidation();
+    }
+
+    public function openAttendanceDetail(int $id): void
+    {
+        $this->showFormModal = false;
+        $this->showMobileFilterModal = false;
+        $this->selectedAttendanceId = $id;
+        $this->showAttendanceDetailModal = true;
+    }
+
+    public function closeAttendanceDetail(): void
+    {
+        $this->showAttendanceDetailModal = false;
+        $this->selectedAttendanceId = null;
     }
 
     public function approve($id): void
@@ -487,6 +514,16 @@ class ManualAttendance extends Component
     public function render()
     {
         $summaryQuery = $this->attendanceQuery(false);
+        $selectedAttendance = $this->selectedAttendanceId
+            ? Attendance::query()
+                ->with([
+                    'student.user',
+                    'student.class',
+                    'requestedBy',
+                    'reviewedBy',
+                ])
+                ->find($this->selectedAttendanceId)
+            : null;
 
         return view('livewire.attendance.manual-attendance', [
             'classes' => SchoolClass::query()
@@ -521,6 +558,8 @@ class ManualAttendance extends Component
                 $this->dateFilter,
                 $this->approvalFilter,
             ])->filter()->count(),
+
+            'selectedAttendance' => $selectedAttendance,
         ]);
     }
 }

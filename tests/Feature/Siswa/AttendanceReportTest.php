@@ -84,11 +84,13 @@ class AttendanceReportTest extends TestCase
             ->actingAs($user)
             ->get(route('siswa.attendance.report'));
 
+        $monthName = today()->translatedFormat('F');
+
         $response->assertOk();
-        $response->assertSee('Rekap Bulan Ini');
+        $response->assertSee('Rekap Bulan '.$monthName);
         $response->assertSee('Kelas 1');
         $response->assertSee('Hadir');
-        $response->assertSee('Kalender Bulan Ini');
+        $response->assertSee('Kalender Bulan '.$monthName);
         $response->assertSee('Libur');
         $response->assertSee('Libur Nasional');
         $response->assertDontSee('Grafik');
