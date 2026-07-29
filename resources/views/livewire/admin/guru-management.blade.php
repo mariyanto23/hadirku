@@ -202,7 +202,7 @@
                                     </div>
                                 </div>
 
-                                <div class="flex shrink-0 items-center gap-0.5">
+                                <div class="grid w-20 shrink-0 grid-cols-2 place-items-center gap-1">
                                     <button
                                         type="button"
                                         x-on:click="openEditModal(
@@ -226,6 +226,7 @@
                                     <form
                                         method="POST"
                                         action="{{ route('admin.gurus.toggle-status', $guru) }}"
+                                        class="flex"
                                         x-on:submit.prevent="
                                             confirmAction({
                                                 title: '{{ $guru->is_active ? 'Nonaktifkan guru?' : 'Aktifkan guru?' }}',

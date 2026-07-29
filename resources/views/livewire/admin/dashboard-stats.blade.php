@@ -1,4 +1,4 @@
-<div class="hk-page">
+<div class="hk-page max-w-full overflow-x-hidden">
 
     <section class="overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-blue-600 via-indigo-600 to-emerald-500 p-6 text-white shadow-glow sm:p-8">
         <div class="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
@@ -39,6 +39,24 @@
     </section>
 
     <section class="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
+
+        <div class="hk-card p-3 sm:p-5">
+            <div class="grid min-h-16 grid-cols-[1fr_auto] items-center gap-2 sm:min-h-20 sm:gap-4">
+                <div>
+                    <div class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300 sm:text-sm">
+                        Total Siswa
+                    </div>
+                    <div class="mt-1 text-2xl font-extrabold text-slate-900 dark:text-white sm:mt-2 sm:text-3xl">
+                        {{ $totalStudents }}
+                    </div>
+                </div>
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 sm:h-12 sm:w-12">
+                    <svg class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 11a4 4 0 1 0-8 0m8 0a4 4 0 1 1-8 0M4 20a8 8 0 0 1 16 0" />
+                    </svg>
+                </div>
+            </div>
+        </div>
 
         <div class="hk-card p-3 sm:p-5">
             <div class="grid min-h-16 grid-cols-[1fr_auto] items-center gap-2 sm:min-h-20 sm:gap-4">
@@ -166,56 +184,38 @@
             </div>
         </div>
 
-        <div class="hk-card p-3 sm:p-5">
-            <div class="grid min-h-16 grid-cols-[1fr_auto] items-center gap-2 sm:min-h-20 sm:gap-4">
-                <div>
-                    <div class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300 sm:text-sm">
-                        Total Siswa
-                    </div>
-                    <div class="mt-1 text-2xl font-extrabold text-slate-900 dark:text-white sm:mt-2 sm:text-3xl">
-                        {{ $totalStudents }}
-                    </div>
-                </div>
-                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 sm:h-12 sm:w-12">
-                    <svg class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 11a4 4 0 1 0-8 0m8 0a4 4 0 1 1-8 0M4 20a8 8 0 0 1 16 0" />
-                    </svg>
-                </div>
-            </div>
-        </div>
-
     </section>
 
-    <section class="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+    <section class="grid min-w-0 max-w-full gap-6 overflow-hidden lg:grid-cols-[0.9fr_1.1fr]">
 
-        <div class="hk-card p-6">
+        <div class="hk-card min-w-0 overflow-hidden p-5 sm:p-6">
             <div class="flex items-start justify-between gap-4">
-                <div>
+                <div class="min-w-0">
                     <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">
                         Aksi Cepat
                     </h2>
                 </div>
             </div>
 
-            <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                <a href="{{ route('admin.students') }}" class="hk-btn-primary justify-start">
+            <div class="mt-6 grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                <a href="{{ route('admin.students') }}" class="hk-btn-primary w-full min-w-0 justify-start text-left">
                     Kelola Siswa
                 </a>
-                <a href="{{ route('admin.face-registration') }}" class="hk-btn-secondary justify-start">
+                <a href="{{ route('admin.face-registration') }}" class="hk-btn-secondary w-full min-w-0 justify-start text-left">
                     Registrasi Wajah
                 </a>
-                <a href="{{ route('admin.manual.attendance') }}" class="hk-btn-secondary justify-start">
+                <a href="{{ route('admin.manual.attendance') }}" class="hk-btn-secondary w-full min-w-0 justify-start text-left">
                     Izin/Sakit
                 </a>
-                <a href="{{ route('admin.gurus') }}" class="hk-btn-secondary justify-start">
+                <a href="{{ route('admin.gurus') }}" class="hk-btn-secondary w-full min-w-0 justify-start text-left">
                     Kelola Guru
                 </a>
             </div>
         </div>
 
-        <div class="hk-card p-6">
-            <div class="flex items-center justify-between gap-4">
-                <div>
+        <div class="hk-card min-w-0 overflow-hidden p-5 sm:p-6">
+            <div class="flex min-w-0 items-center justify-between gap-4">
+                <div class="min-w-0">
                     <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">
                         Aktivitas Presensi
                     </h2>
@@ -225,21 +225,21 @@
                 </div>
             </div>
 
-            <div class="mt-6 space-y-3">
+            <div class="mt-6 min-w-0 space-y-3">
                 @forelse($recentAttendances as $attendance)
                     @php
                         $studentName = $attendance->student?->user?->name ?? 'Siswa';
                     @endphp
 
-                    <div class="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/30">
-                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-sm font-extrabold text-blue-600 dark:bg-blue-500/20 dark:text-blue-300">
+                    <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-100 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-950/30 sm:gap-4 sm:p-4">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-sm font-extrabold text-blue-600 dark:bg-blue-500/20 dark:text-blue-300 sm:h-11 sm:w-11">
                             {{ strtoupper(substr($studentName, 0, 1)) }}
                         </div>
                         <div class="min-w-0 flex-1">
                             <div class="truncate text-sm font-extrabold text-slate-900 dark:text-white">
                                 {{ $studentName }}
                             </div>
-                            <div class="mt-0.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                            <div class="mt-0.5 truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
                                 {{ $attendance->student?->class?->name ?? '-' }}
                                 &middot;
                                 {{ $attendance->attendance_date?->format('d/m/Y') }}
@@ -247,7 +247,7 @@
                                 {{ $attendance->attendance_time }}
                             </div>
                         </div>
-                        <span class="hk-badge
+                        <span class="hk-badge max-w-[6.5rem] shrink-0 truncate
                             @if($attendance->status === 'hadir')
                                 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300
                             @elseif($attendance->status === 'terlambat')
