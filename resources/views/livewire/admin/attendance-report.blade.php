@@ -829,24 +829,24 @@
             </div>
         </section>
 
-        <section class="grid gap-4 lg:grid-cols-2">
-            <div class="hk-card p-5 sm:p-6">
-                <div class="flex items-center gap-3">
+        <section class="grid min-w-0 max-w-full gap-4 overflow-hidden lg:grid-cols-2">
+            <div class="hk-card min-w-0 overflow-hidden p-4 sm:p-6">
+                <div class="flex min-w-0 items-center gap-3">
                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 dark:bg-amber-500/15 dark:text-amber-300">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 6H3v1a4 4 0 0 0 4 4M19 6h2v1a4 4 0 0 1-4 4" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">
+                    <h3 class="min-w-0 truncate text-lg font-extrabold text-slate-900 dark:text-white">
                         Siswa Paling Rajin
                     </h3>
                 </div>
 
                 <div class="mt-5 space-y-3">
                     @forelse($attendanceTrend['rankings']['diligent'] as $index => $student)
-                        <div class="flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/45 px-4 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-                            <div class="w-8 shrink-0 text-xl font-extrabold {{ $index === 1 ? 'text-slate-400 dark:text-slate-500' : 'text-amber-500 dark:text-amber-300' }}">
+                        <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/45 px-3 py-3 dark:border-emerald-500/20 dark:bg-emerald-500/10 sm:gap-4 sm:px-4">
+                            <div class="w-7 shrink-0 text-lg font-extrabold {{ $index === 1 ? 'text-slate-400 dark:text-slate-500' : 'text-amber-500 dark:text-amber-300' }} sm:w-8 sm:text-xl">
                                 #{{ $index + 1 }}
                             </div>
 
@@ -859,11 +859,11 @@
                                 </div>
                             </div>
 
-                            <div class="text-right">
-                                <div class="text-sm font-extrabold text-emerald-600 dark:text-emerald-300">
+                            <div class="w-16 shrink-0 text-right sm:w-20">
+                                <div class="truncate text-sm font-extrabold text-emerald-600 dark:text-emerald-300">
                                     {{ $student->attendance_days_count }} hari
                                 </div>
-                                <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                <div class="truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
                                     kehadiran
                                 </div>
                             </div>
@@ -876,22 +876,22 @@
                 </div>
             </div>
 
-            <div class="hk-card p-5 sm:p-6">
-                <div class="flex items-center gap-3">
+            <div class="hk-card min-w-0 overflow-hidden p-4 sm:p-6">
+                <div class="flex min-w-0 items-center gap-3">
                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-500 dark:bg-red-500/15 dark:text-red-300">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">
+                    <h3 class="min-w-0 truncate text-lg font-extrabold text-slate-900 dark:text-white">
                         Sering Tidak Hadir
                     </h3>
                 </div>
 
                 <div class="mt-5 space-y-3">
                     @forelse($attendanceTrend['rankings']['oftenAbsent'] as $index => $student)
-                        <div class="flex items-center gap-4 rounded-2xl border border-red-100 bg-red-50/45 px-4 py-3 dark:border-red-500/20 dark:bg-red-500/10">
-                            <div class="w-8 shrink-0 text-xl font-extrabold text-red-500 dark:text-red-300">
+                        <div class="flex min-w-0 items-center gap-3 rounded-2xl border border-red-100 bg-red-50/45 px-3 py-3 dark:border-red-500/20 dark:bg-red-500/10 sm:gap-4 sm:px-4">
+                            <div class="w-7 shrink-0 text-lg font-extrabold text-red-500 dark:text-red-300 sm:w-8 sm:text-xl">
                                 #{{ $index + 1 }}
                             </div>
 
@@ -904,11 +904,11 @@
                                 </div>
                             </div>
 
-                            <div class="text-right">
-                                <div class="text-sm font-extrabold text-red-600 dark:text-red-300">
+                            <div class="w-16 shrink-0 text-right sm:w-20">
+                                <div class="truncate text-sm font-extrabold text-red-600 dark:text-red-300">
                                     {{ $student->absence_days_count }} hari
                                 </div>
-                                <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                <div class="truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
                                     tidak hadir
                                 </div>
                             </div>
