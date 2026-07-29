@@ -53,7 +53,7 @@
                                 </span>
                                 <input
                                     type="radio"
-                                    wire:model="status"
+                                    wire:model.live="status"
                                     value="izin"
                                     class="h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500"
                                 >
@@ -68,7 +68,7 @@
                                 </span>
                                 <input
                                     type="radio"
-                                    wire:model="status"
+                                    wire:model.live="status"
                                     value="sakit"
                                     class="h-4 w-4 border-slate-300 text-indigo-600 focus:ring-indigo-500"
                                 >

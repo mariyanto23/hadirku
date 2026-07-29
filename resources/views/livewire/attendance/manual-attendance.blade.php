@@ -878,7 +878,7 @@
                                 <span class="text-sm font-extrabold">{{ $label }}</span>
                                 <input
                                     type="radio"
-                                    wire:model="status"
+                                    wire:model.live="status"
                                     value="{{ $value }}"
                                     class="h-4 w-4 border-slate-300 text-blue-600 focus:ring-blue-500"
                                 >
