@@ -118,30 +118,30 @@
                             </div>
                         </div>
 
-                        <div class="hidden rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/30 lg:block">
-                            <div class="text-[10px] font-bold uppercase tracking-wide text-sky-600 dark:text-sky-300">
-                                Punya Data Wajah
+                        <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/30">
+                            <div class="text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-300">
+                                Sudah Presensi
                             </div>
                             <div class="mt-1 text-lg font-extrabold text-slate-900 dark:text-white">
-                                {{ $selectedClassStats['descriptor_students'] }}
+                                {{ $selectedClassStats['attended_students'] }}
                             </div>
                         </div>
 
                         <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/30">
-                            <div class="text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-300">
+                            <div class="text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-300">
+                                Belum Presensi
+                            </div>
+                            <div class="mt-1 text-lg font-extrabold text-slate-900 dark:text-white">
+                                {{ $selectedClassStats['unattended_students'] }}
+                            </div>
+                        </div>
+
+                        <div class="rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/30">
+                            <div class="text-[10px] font-bold uppercase tracking-wide text-sky-600 dark:text-sky-300">
                                 Siap Dipindai
                             </div>
                             <div class="mt-1 text-lg font-extrabold text-slate-900 dark:text-white">
                                 {{ $selectedClassStats['ready_students'] }}
-                            </div>
-                        </div>
-
-                        <div class="hidden rounded-2xl border border-slate-200 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/30 lg:block">
-                            <div class="text-[10px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
-                                Descriptor
-                            </div>
-                            <div class="mt-1 text-lg font-extrabold text-slate-900 dark:text-white">
-                                {{ $selectedClassStats['descriptors'] }}
                             </div>
                         </div>
                     </div>
@@ -298,63 +298,126 @@
                 </div>
             </section>
 
-            <aside class="hk-card min-w-0 overflow-hidden p-5 sm:p-6">
-                <div class="flex items-center justify-between gap-4">
-                    <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">
-                        Presensi Terbaru
-                    </h2>
+            <aside class="min-w-0 space-y-6">
+                <section class="hk-card min-w-0 overflow-hidden p-5 sm:p-6">
+                    <div class="flex items-center justify-between gap-4">
+                        <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">
+                            Presensi Terbaru
+                        </h2>
 
-                    <div class="rounded-2xl bg-emerald-100 px-3 py-2 text-sm font-extrabold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
-                        {{ $recentAttendances->count() }}
+                        <div class="rounded-2xl bg-emerald-100 px-3 py-2 text-sm font-extrabold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                            {{ $recentAttendances->count() }}
+                        </div>
                     </div>
-                </div>
 
-                <div class="mt-5 space-y-3">
-                    @forelse($recentAttendances as $attendance)
-                        @php
-                            $statusLabel = $attendance->status === 'alpha' ? 'Alpa' : ucfirst($attendance->status);
-                        @endphp
+                    <div class="mt-5 space-y-3">
+                        @forelse($recentAttendances as $attendance)
+                            @php
+                                $statusLabel = $attendance->status === 'alpha' ? 'Alpa' : ucfirst($attendance->status);
+                            @endphp
 
-                        <div class="rounded-2xl border border-slate-100 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/30">
-                            <div class="flex items-center gap-3">
-                                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-sm font-extrabold text-blue-600 dark:bg-blue-500/20 dark:text-blue-300">
-                                    {{ strtoupper(substr($attendance->student->user->name, 0, 1)) }}
-                                </div>
-
-                                <div class="min-w-0 flex-1">
-                                    <div class="truncate text-sm font-extrabold text-slate-900 dark:text-white">
-                                        {{ $attendance->student->user->name }}
+                            <div class="rounded-2xl border border-slate-100 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/30">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-sm font-extrabold text-blue-600 dark:bg-blue-500/20 dark:text-blue-300">
+                                        {{ strtoupper(substr($attendance->student->user->name, 0, 1)) }}
                                     </div>
-                                    <div class="mt-0.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                                        {{ $attendance->student->class->name }} &middot; {{ substr((string) $attendance->attendance_time, 0, 5) }}
+
+                                    <div class="min-w-0 flex-1">
+                                        <div class="truncate text-sm font-extrabold text-slate-900 dark:text-white">
+                                            {{ $attendance->student->user->name }}
+                                        </div>
+                                        <div class="mt-0.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                            {{ $attendance->student->class->name }} &middot; {{ substr((string) $attendance->attendance_time, 0, 5) }}
+                                        </div>
+                                    </div>
+
+                                    <span class="hk-badge shrink-0
+                                        @if($attendance->status === 'hadir')
+                                            bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300
+                                        @elseif($attendance->status === 'terlambat')
+                                            bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300
+                                        @elseif($attendance->status === 'sakit')
+                                            bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300
+                                        @elseif($attendance->status === 'izin')
+                                            bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300
+                                        @else
+                                            bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300
+                                        @endif
+                                    ">
+                                        {{ $statusLabel }}
+                                    </span>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="rounded-2xl border border-dashed border-slate-300 p-8 text-center dark:border-slate-700">
+                                <div class="text-sm font-bold text-slate-500 dark:text-slate-400">
+                                    Belum ada presensi hari ini.
+                                </div>
+                            </div>
+                        @endforelse
+                    </div>
+                </section>
+
+                <section class="hk-card min-w-0 overflow-hidden p-5 sm:p-6">
+                    <div class="flex items-center justify-between gap-4">
+                        <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">
+                            Belum Presensi
+                        </h2>
+
+                        <div class="rounded-2xl bg-amber-100 px-3 py-2 text-sm font-extrabold text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                            {{ $selectedClassStats['unattended_students'] ?? 0 }}
+                        </div>
+                    </div>
+
+                    <div class="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
+                        Hari ini
+                    </div>
+
+                    <div class="mt-5 space-y-3">
+                        @if(! $selectedClassStats)
+                            <div class="rounded-2xl border border-dashed border-slate-300 p-8 text-center dark:border-slate-700">
+                                <div class="text-sm font-bold text-slate-500 dark:text-slate-400">
+                                    Pilih kelas untuk melihat siswa yang belum presensi.
+                                </div>
+                            </div>
+                        @elseif($selectedClassStats['unattended_students'] === 0)
+                            <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-center dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                                <div class="text-sm font-extrabold text-emerald-700 dark:text-emerald-300">
+                                    Semua siswa sudah presensi.
+                                </div>
+                            </div>
+                        @else
+                            @foreach($selectedClassStats['unattended_list'] as $student)
+                                <div class="rounded-2xl border border-slate-100 bg-white/70 p-4 dark:border-slate-800 dark:bg-slate-950/30">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-sm font-extrabold text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                                            {{ strtoupper(substr($student['name'], 0, 1)) }}
+                                        </div>
+
+                                        <div class="min-w-0 flex-1">
+                                            <div class="truncate text-sm font-extrabold text-slate-900 dark:text-white">
+                                                {{ $student['name'] }}
+                                            </div>
+                                            <div class="mt-0.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                                NIS {{ $student['nis'] }} &middot; {{ $student['descriptors_count'] }} descriptor
+                                            </div>
+                                        </div>
+
+                                        <span class="hk-badge shrink-0 {{ $student['ready'] ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300' }}">
+                                            {{ $student['ready'] ? 'Siap' : 'Belum Siap' }}
+                                        </span>
                                     </div>
                                 </div>
+                            @endforeach
 
-                                <span class="hk-badge shrink-0
-                                    @if($attendance->status === 'hadir')
-                                        bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300
-                                    @elseif($attendance->status === 'terlambat')
-                                        bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300
-                                    @elseif($attendance->status === 'sakit')
-                                        bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300
-                                    @elseif($attendance->status === 'izin')
-                                        bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300
-                                    @else
-                                        bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300
-                                    @endif
-                                ">
-                                    {{ $statusLabel }}
-                                </span>
-                            </div>
-                        </div>
-                    @empty
-                        <div class="rounded-2xl border border-dashed border-slate-300 p-8 text-center dark:border-slate-700">
-                            <div class="text-sm font-bold text-slate-500 dark:text-slate-400">
-                                Belum ada presensi hari ini.
-                            </div>
-                        </div>
-                    @endforelse
-                </div>
+                            @if($selectedClassStats['unattended_students'] > count($selectedClassStats['unattended_list']))
+                                <div class="rounded-2xl border border-dashed border-slate-300 p-4 text-center text-sm font-bold text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                                    +{{ $selectedClassStats['unattended_students'] - count($selectedClassStats['unattended_list']) }} siswa lainnya belum presensi.
+                                </div>
+                            @endif
+                        @endif
+                    </div>
+                </section>
             </aside>
 
         </section>

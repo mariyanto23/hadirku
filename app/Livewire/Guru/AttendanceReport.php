@@ -3,9 +3,12 @@
 namespace App\Livewire\Guru;
 
 use App\Exports\AttendanceExport;
+use App\Exports\UnattendedStudentsExport;
 use App\Models\Attendance;
 use App\Models\SchoolClass;
+use App\Models\Student;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
@@ -13,6 +16,8 @@ use Maatwebsite\Excel\Facades\Excel;
 class AttendanceReport extends Component
 {
     use WithPagination;
+
+    private const STATUS_UNATTENDED = 'belum_presensi';
 
     public string $search = '';
 
@@ -60,6 +65,14 @@ class AttendanceReport extends Component
     public function updatingStatusFilter(): void
     {
         $this->resetPage();
+    }
+
+    public function updatedStatusFilter(): void
+    {
+        if ($this->isUnattendedMode()) {
+            $this->approvalFilter = '';
+            $this->mobileApprovalFilter = '';
+        }
     }
 
     public function updatingClassFilter(): void
@@ -137,6 +150,10 @@ class AttendanceReport extends Component
             return;
         }
 
+        if ($this->mobileStatusFilter === self::STATUS_UNATTENDED) {
+            $this->mobileApprovalFilter = '';
+        }
+
         $this->classFilter = $this->mobileClassFilter;
         $this->statusFilter = $this->mobileStatusFilter;
         $this->approvalFilter = $this->mobileApprovalFilter;
@@ -210,6 +227,16 @@ class AttendanceReport extends Component
             return null;
         }
 
+        if ($this->isUnattendedMode()) {
+            return Excel::download(
+                new UnattendedStudentsExport(
+                    $this->unattendedStudentQuery()->get(),
+                    $this->unattendedDate()
+                ),
+                $this->exportFileName('xlsx')
+            );
+        }
+
         return Excel::download(
             new AttendanceExport(
                 $this->search,
@@ -227,6 +254,23 @@ class AttendanceReport extends Component
     {
         if (! $this->ensureExportableDateRange()) {
             return null;
+        }
+
+        if ($this->isUnattendedMode()) {
+            $students = $this->unattendedStudentQuery()->get();
+
+            $pdf = Pdf::loadView('exports.attendance-report-pdf', [
+                'attendances' => collect(),
+                'unattendedStudents' => $students,
+                'unattendedMode' => true,
+                'unattendedDate' => Carbon::parse($this->unattendedDate())->translatedFormat('d F Y'),
+                'filters' => $this->activeFilters($this->classes()),
+                'generatedAt' => now()->translatedFormat('d F Y H:i'),
+            ])->setPaper('a4', 'landscape');
+
+            return response()->streamDownload(function () use ($pdf) {
+                echo $pdf->output();
+            }, $this->exportFileName('pdf'));
         }
 
         $attendances = $this->attendanceQuery()
@@ -267,10 +311,65 @@ class AttendanceReport extends Component
                     });
                 });
             })
-            ->when($this->statusFilter, fn ($query) => $query->where('status', $this->statusFilter))
+            ->when($this->attendanceStatusFilter(), fn ($query) => $query->where('status', $this->attendanceStatusFilter()))
             ->when($this->approvalFilter, fn ($query) => $query->where('approval_status', $this->approvalFilter))
             ->when($this->dateStartFilter, fn ($query) => $query->whereDate('attendance_date', '>=', $this->dateStartFilter))
             ->when($this->dateEndFilter, fn ($query) => $query->whereDate('attendance_date', '<=', $this->dateEndFilter));
+    }
+
+    private function isUnattendedMode(): bool
+    {
+        return $this->statusFilter === self::STATUS_UNATTENDED;
+    }
+
+    private function attendanceStatusFilter(): string
+    {
+        return $this->isUnattendedMode() ? '' : $this->statusFilter;
+    }
+
+    private function unattendedDate(): string
+    {
+        $today = today()->toDateString();
+        $start = $this->dateStartFilter;
+        $end = $this->dateEndFilter;
+
+        if ($start && $end && $start === $end) {
+            return $start;
+        }
+
+        if ($start && $today < $start) {
+            return $start;
+        }
+
+        if ($end && $today > $end) {
+            return $end;
+        }
+
+        return $today;
+    }
+
+    private function unattendedStudentQuery()
+    {
+        $attendanceDate = $this->unattendedDate();
+
+        return Student::query()
+            ->with(['user', 'class'])
+            ->withCount('descriptors')
+            ->when($this->classFilter, function ($query) {
+                $query->where('class_id', $this->classFilter);
+            })
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->whereHas('user', function ($userQuery) {
+                        $userQuery->where('name', 'like', '%'.$this->search.'%');
+                    })->orWhere('nis', 'like', '%'.$this->search.'%');
+                });
+            })
+            ->whereDoesntHave('attendances', function ($query) use ($attendanceDate) {
+                $query->whereDate('attendance_date', $attendanceDate);
+            })
+            ->orderBy('class_id')
+            ->orderBy('nis');
     }
 
     private function activeFilters($classes): array
@@ -283,6 +382,10 @@ class AttendanceReport extends Component
 
         if ($this->statusFilter) {
             $filters[] = 'Status: '.$this->statusLabel($this->statusFilter);
+        }
+
+        if ($this->isUnattendedMode()) {
+            $filters[] = 'Tanggal acuan: '.Carbon::parse($this->unattendedDate())->translatedFormat('d F Y');
         }
 
         if ($this->approvalFilter) {
@@ -369,6 +472,7 @@ class AttendanceReport extends Component
             'izin' => 'Izin',
             'sakit' => 'Sakit',
             'alpha' => 'Alpa',
+            self::STATUS_UNATTENDED => 'Belum Presensi',
             default => '-',
         };
     }
@@ -401,24 +505,29 @@ class AttendanceReport extends Component
 
     public function render()
     {
-        $summaryQuery = $this->attendanceQuery();
         $classes = $this->classes();
-        $attendances = $this->attendanceQuery()
-            ->latest()
-            ->paginate(10);
-        $selectedAttendance = $this->selectedAttendanceId
+        $isUnattendedMode = $this->isUnattendedMode();
+        $summaryQuery = $this->attendanceQuery();
+        $attendances = $isUnattendedMode
+            ? $this->unattendedStudentQuery()->paginate(10)
+            : $this->attendanceQuery()
+                ->latest()
+                ->paginate(10);
+        $selectedAttendance = (! $isUnattendedMode && $this->selectedAttendanceId)
             ? $this->attendanceQuery()->find($this->selectedAttendanceId)
             : null;
 
         return view('livewire.guru.attendance-report', [
             'classes' => $classes,
             'attendances' => $attendances,
-            'resultText' => $attendances->total().' data ditemukan',
+            'resultText' => $isUnattendedMode
+                ? $attendances->total().' siswa belum presensi'
+                : $attendances->total().' data ditemukan',
             'summary' => [
-                'total' => (clone $summaryQuery)->count(),
-                'present' => (clone $summaryQuery)->where('status', 'hadir')->count(),
-                'late' => (clone $summaryQuery)->where('status', 'terlambat')->count(),
-                'absent' => (clone $summaryQuery)->where('status', 'alpha')->count(),
+                'total' => $isUnattendedMode ? $attendances->total() : (clone $summaryQuery)->count(),
+                'present' => $isUnattendedMode ? 0 : (clone $summaryQuery)->where('status', 'hadir')->count(),
+                'late' => $isUnattendedMode ? 0 : (clone $summaryQuery)->where('status', 'terlambat')->count(),
+                'absent' => $isUnattendedMode ? 0 : (clone $summaryQuery)->where('status', 'alpha')->count(),
             ],
             'defaultClass' => auth()->user()?->defaultClass,
             'selectedClass' => $this->classFilter
@@ -432,6 +541,8 @@ class AttendanceReport extends Component
             ])->filter()->count(),
             'activeFilters' => $this->activeFilters($classes),
             'selectedAttendance' => $selectedAttendance,
+            'isUnattendedMode' => $isUnattendedMode,
+            'unattendedDateLabel' => Carbon::parse($this->unattendedDate())->translatedFormat('d F Y'),
         ]);
     }
 }

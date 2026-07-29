@@ -156,4 +156,71 @@ class AttendanceReportTest extends TestCase
         $response->assertSee('Semua Kelas');
         $response->assertSee('0 data ditemukan');
     }
+
+    public function test_guru_can_filter_unattended_students_from_default_class(): void
+    {
+        Role::create(['name' => 'guru']);
+
+        $defaultClass = SchoolClass::create(['name' => 'Kelas 1']);
+        $otherClass = SchoolClass::create(['name' => 'Kelas 2']);
+
+        $guru = User::factory()->create([
+            'default_class_id' => $defaultClass->id,
+        ]);
+        $guru->assignRole('guru');
+
+        $attendedUser = User::factory()->create([
+            'name' => 'Siswa Sudah',
+            'username' => '1003',
+        ]);
+        $attendedStudent = Student::create([
+            'user_id' => $attendedUser->id,
+            'class_id' => $defaultClass->id,
+            'nis' => '1003',
+            'gender' => 'Laki-laki',
+        ]);
+
+        $unattendedUser = User::factory()->create([
+            'name' => 'Siswa Belum',
+            'username' => '1004',
+        ]);
+        Student::create([
+            'user_id' => $unattendedUser->id,
+            'class_id' => $defaultClass->id,
+            'nis' => '1004',
+            'gender' => 'Perempuan',
+        ]);
+
+        $otherUser = User::factory()->create([
+            'name' => 'Siswa Kelas Lain',
+            'username' => '1005',
+        ]);
+        Student::create([
+            'user_id' => $otherUser->id,
+            'class_id' => $otherClass->id,
+            'nis' => '1005',
+            'gender' => 'Laki-laki',
+        ]);
+
+        Attendance::create([
+            'student_id' => $attendedStudent->id,
+            'attendance_date' => today(),
+            'attendance_time' => '07:00:00',
+            'status' => 'hadir',
+            'approval_status' => 'approved',
+        ]);
+
+        Livewire::actingAs($guru)
+            ->test(GuruAttendanceReport::class)
+            ->assertSet('classFilter', (string) $defaultClass->id)
+            ->set('statusFilter', 'belum_presensi')
+            ->assertSee('Siswa Belum')
+            ->assertDontSee('Siswa Sudah')
+            ->assertDontSee('Siswa Kelas Lain')
+            ->assertSee('siswa belum presensi');
+
+        $this->assertDatabaseMissing('attendances', [
+            'status' => 'belum_presensi',
+        ]);
+    }
 }

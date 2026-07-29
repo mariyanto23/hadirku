@@ -368,6 +368,56 @@ class AcademicHolidayIntegrationTest extends TestCase
         );
     }
 
+    public function test_face_attendance_shows_unattended_students_for_selected_class(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-29 08:15:00'));
+
+        Role::create(['name' => 'guru']);
+
+        $class = SchoolClass::create(['name' => 'Kelas 1']);
+        $guru = User::factory()->create(['default_class_id' => $class->id]);
+        $guru->assignRole('guru');
+
+        $attendedUser = User::factory()->create([
+            'name' => 'Siswa Sudah',
+            'username' => '1004',
+        ]);
+        $attendedStudent = Student::create([
+            'user_id' => $attendedUser->id,
+            'class_id' => $class->id,
+            'nis' => '1004',
+            'gender' => 'Laki-laki',
+        ]);
+
+        $unattendedUser = User::factory()->create([
+            'name' => 'Siswa Belum',
+            'username' => '1005',
+        ]);
+        Student::create([
+            'user_id' => $unattendedUser->id,
+            'class_id' => $class->id,
+            'nis' => '1005',
+            'gender' => 'Perempuan',
+        ]);
+
+        Attendance::create([
+            'student_id' => $attendedStudent->id,
+            'attendance_date' => '2026-07-29',
+            'attendance_time' => '07:15:00',
+            'status' => 'terlambat',
+            'confidence_score' => 0.91,
+            'match_threshold_used' => 0.5,
+            'approval_status' => 'approved',
+        ]);
+
+        Livewire::actingAs($guru)
+            ->test(FaceAttendance::class)
+            ->assertSee('Sudah Presensi')
+            ->assertSee('Belum Presensi')
+            ->assertSee('Siswa Belum')
+            ->assertSee('NIS 1005');
+    }
+
     public function test_auto_alpha_skips_non_school_day(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-06-07 12:00:00'));

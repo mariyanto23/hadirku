@@ -95,7 +95,38 @@
         </div>
     </div>
 
-    @if($attendances->isEmpty())
+    @if(($unattendedMode ?? false) && $unattendedStudents->isEmpty())
+        <div class="empty">
+            Tidak ada siswa yang belum presensi pada tanggal acuan.
+        </div>
+    @elseif($unattendedMode ?? false)
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama</th>
+                    <th>NIS</th>
+                    <th>Kelas</th>
+                    <th>Tanggal Acuan</th>
+                    <th>Status</th>
+                    <th>Data Wajah</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($unattendedStudents as $student)
+                    <tr>
+                        <td>{{ $student->user->name }}</td>
+                        <td>{{ $student->nis }}</td>
+                        <td>{{ $student->class?->name ?? '-' }}</td>
+                        <td>{{ $unattendedDate }}</td>
+                        <td class="status">Belum Presensi</td>
+                        <td>{{ $student->descriptors_count }} descriptor</td>
+                        <td>{{ $student->descriptors_count >= 3 ? 'Siap dipindai' : 'Data wajah belum lengkap' }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @elseif($attendances->isEmpty())
         <div class="empty">
             Tidak ada presensi untuk filter yang dipilih.
         </div>

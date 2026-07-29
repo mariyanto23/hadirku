@@ -211,6 +211,7 @@ Peninjauan berjalan halaman demi halaman dari admin, guru, lalu siswa.
   - Jika presensi hari ini ditutup karena Kalender Akademik (`Presensi Tutup`) atau karena bukan `Hari Sekolah`, halaman Presensi Wajah menampilkan banner status sejak awal, tombol `Mulai Pemindaian` berubah menjadi `Presensi Ditutup`, dan kamera tidak perlu dinyalakan.
   - Jika Kalender Akademik membuka presensi sebagai pengecualian (`Presensi Buka`), halaman menampilkan banner info bahwa presensi dibuka untuk kegiatan sekolah dan pemindaian tetap aktif.
   - Jalur simpan presensi memakai satu sumber waktu (`now()`) untuk tanggal, jam, cek libur, cek hari sekolah, cek duplikat, dan data yang disimpan. Tes regresi memastikan presensi terlambat kemarin tidak memblokir presensi hari ini, sementara presensi ganda pada tanggal yang sama tetap ditolak.
+  - Ringkasan kelas Presensi Wajah menampilkan `Siswa Kelas`, `Sudah Presensi`, `Belum Presensi`, dan `Siap Dipindai`. Daftar `Belum Presensi` berada di card terpisah di sisi daftar agar guru/admin bisa memantau siswa kelas terpilih yang belum memiliki presensi hari ini tanpa menunggu alpa otomatis.
 - Admin Izin/Sakit sudah direview dan diperbaiki:
   - Input Izin/Sakit manual pindah ke modal.
   - Edit presensi manual memakai modal yang sama.
@@ -240,6 +241,7 @@ Peninjauan berjalan halaman demi halaman dari admin, guru, lalu siswa.
   - Tombol ekspor digabung menjadi satu tombol `Ekspor` dengan dropdown pilihan `Excel` dan `PDF`. Berkas Excel memakai `rekap-presensi.xlsx`; PDF memakai `rekap-presensi.pdf`.
   - Nama file ekspor Rekap dinamis mengikuti rentang tanggal jika ada, misalnya `rekap-presensi-2026-05-01-sampai-2026-05-29.xlsx`; jika tidak ada rentang, memakai tanggal unduh.
   - Ekspor Excel memakai heading native, auto-size kolom, tanggal/jam terformat, dan label status/persetujuan berbahasa Indonesia.
+  - Filter status Rekap mendukung status semu `Belum Presensi`. Status ini tidak disimpan di database; datanya dihitung dari siswa pada kelas filter yang belum punya presensi pada tanggal acuan. Jika periode berupa rentang, tanggal acuan memakai hari ini selama masih berada di rentang, atau ujung rentang terdekat jika tidak.
   - Empty state Rekap menampilkan pesan `Tidak ada presensi untuk filter yang dipilih.` dan tombol `Atur Ulang`.
   - Mobile memakai card list khusus agar user tidak perlu scroll kanan/kiri untuk membaca data presensi. Card mobile Rekap dibuat ringkas: nama, NIS, kelas, tanggal kecil, status, dan ikon chevron. Detail seperti jam, persetujuan, dan keterangan muncul di bottom sheet saat card diklik.
   - Tabel desktop Rekap diringkas menjadi kolom `Siswa`, `Waktu`, `Presensi`, dan `Keterangan`.
@@ -323,6 +325,7 @@ Peninjauan berjalan halaman demi halaman dari admin, guru, lalu siswa.
   - Tampilan awal Rekap Guru memakai `default_class_id` sebagai filter kelas bawaan. Guru tetap bisa memilih `Semua Kelas` atau kelas lain dari filter kelas, termasuk di bottom sheet mobile. Tombol `Atur Ulang` mengembalikan filter ke kelas bawaan dan periode `Bulan Ini`.
   - Jika kelas bawaan belum diatur, tampilan awal memakai `Semua Kelas`.
   - Halaman memakai pola ringkas seperti Admin Rekap: summary card `Total Data`, `Hadir`, `Terlambat`, `Alpa`; filter pencarian/kelas/status/persetujuan/periode; default periode `Bulan Ini`; tabel desktop; card mobile; detail mobile; dan tombol ekspor dropdown `Excel`/`PDF`.
+  - Filter status Guru Rekap juga mendukung `Belum Presensi` sebagai status semu berbasis tanggal acuan. Default tampilan tetap kelas bawaan guru; guru tetap bisa memilih kelas lain atau `Semua Kelas`.
   - Grafik tren belum ditambahkan di Rekap Guru agar halaman tetap ringan; bisa dipertimbangkan setelah versi dasar stabil.
 - Siswa Beranda sudah direview dan dirapikan:
   - Header hero gradient lama diganti header sederhana dengan judul `Beranda`, identitas siswa/kelas, dan jam realtime.

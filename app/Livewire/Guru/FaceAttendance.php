@@ -125,6 +125,8 @@ class FaceAttendance extends Component
             return null;
         }
 
+        $attendanceDate = today()->toDateString();
+
         $class = SchoolClass::query()
             ->find($this->selectedClass);
 
@@ -134,12 +136,36 @@ class FaceAttendance extends Component
 
         $students = Student::query()
             ->where('class_id', $class->id)
+            ->with('user')
             ->withCount('descriptors')
+            ->withExists([
+                'attendances as attended_today' => fn ($query) => $query
+                    ->whereDate('attendance_date', $attendanceDate),
+            ])
             ->get();
+
+        $attendedStudents = $students
+            ->filter(fn ($student) => (bool) $student->attended_today);
+
+        $unattendedStudents = $students
+            ->reject(fn ($student) => (bool) $student->attended_today)
+            ->sortBy(fn ($student) => $student->user?->name)
+            ->values();
 
         return [
             'name' => $class->name,
             'students' => $students->count(),
+            'attended_students' => $attendedStudents->count(),
+            'unattended_students' => $unattendedStudents->count(),
+            'unattended_list' => $unattendedStudents
+                ->take(8)
+                ->map(fn ($student) => [
+                    'name' => $student->user?->name ?? 'Tanpa nama',
+                    'nis' => $student->nis,
+                    'descriptors_count' => $student->descriptors_count,
+                    'ready' => $student->descriptors_count >= 3,
+                ])
+                ->all(),
             'descriptor_students' => $students
                 ->where('descriptors_count', '>', 0)
                 ->count(),

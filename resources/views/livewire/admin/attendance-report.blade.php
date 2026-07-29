@@ -226,11 +226,13 @@
                         <option value="izin">Izin</option>
                         <option value="sakit">Sakit</option>
                         <option value="alpha">Alpa</option>
+                        <option value="belum_presensi">Belum Presensi</option>
                     </select>
 
                     <select
                         wire:model.live="approvalFilter"
                         class="hk-input"
+                        @disabled($isUnattendedMode)
                     >
                         <option value="">Semua Persetujuan</option>
                         <option value="pending">Menunggu</option>
@@ -325,12 +327,40 @@
 
             <div class="mt-4 space-y-3 md:hidden">
                 @forelse($attendances as $attendance)
-                    <button
-                        type="button"
-                        wire:click="openAttendanceDetail({{ $attendance->id }})"
-                        class="w-full rounded-2xl border border-slate-200 bg-white/80 p-4 text-left shadow-sm transition active:scale-[0.99] dark:border-slate-800 dark:bg-slate-950/35"
-                        wire:key="attendance-report-card-{{ $attendance->id }}"
-                    >
+                    @if($isUnattendedMode)
+                        <div
+                            class="w-full rounded-2xl border border-amber-100 bg-amber-50/60 p-4 text-left shadow-sm dark:border-amber-500/20 dark:bg-amber-500/10"
+                            wire:key="attendance-report-unattended-card-{{ $attendance->id }}"
+                        >
+                            <div class="flex items-start gap-3">
+                                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-sm font-extrabold text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                                    {{ strtoupper(substr($attendance->user->name, 0, 1)) }}
+                                </div>
+
+                                <div class="min-w-0 flex-1">
+                                    <div class="truncate text-sm font-extrabold text-slate-900 dark:text-white">
+                                        {{ $attendance->user->name }}
+                                    </div>
+                                    <div class="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                        NIS {{ $attendance->nis }} &middot; {{ $attendance->class?->name ?? '-' }}
+                                    </div>
+                                    <div class="mt-2 text-xs font-bold text-slate-400 dark:text-slate-500">
+                                        Tanggal acuan {{ $unattendedDateLabel }}
+                                    </div>
+                                </div>
+
+                                <span class="hk-badge shrink-0 bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                                    Belum Presensi
+                                </span>
+                            </div>
+                        </div>
+                    @else
+                        <button
+                            type="button"
+                            wire:click="openAttendanceDetail({{ $attendance->id }})"
+                            class="w-full rounded-2xl border border-slate-200 bg-white/80 p-4 text-left shadow-sm transition active:scale-[0.99] dark:border-slate-800 dark:bg-slate-950/35"
+                            wire:key="attendance-report-card-{{ $attendance->id }}"
+                        >
                         <div class="flex items-start gap-3">
                             <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-sm font-extrabold text-blue-600 dark:bg-blue-500/20 dark:text-blue-300">
                                 {{ strtoupper(substr($attendance->student->user->name, 0, 1)) }}
@@ -370,11 +400,12 @@
                                 </svg>
                             </div>
                         </div>
-                    </button>
+                        </button>
+                    @endif
                 @empty
                     <div class="rounded-2xl border border-dashed border-slate-300 p-8 text-center dark:border-slate-700">
                         <div class="text-sm font-bold text-slate-500 dark:text-slate-400">
-                            Tidak ada presensi untuk filter yang dipilih.
+                            {{ $isUnattendedMode ? 'Tidak ada siswa yang belum presensi pada tanggal acuan.' : 'Tidak ada presensi untuk filter yang dipilih.' }}
                         </div>
                         <button
                             type="button"
@@ -393,7 +424,7 @@
                         <thead>
                             <tr>
                                 <th>Siswa</th>
-                                <th>Waktu</th>
+                                <th>{{ $isUnattendedMode ? 'Tanggal Acuan' : 'Waktu' }}</th>
                                 <th>Presensi</th>
                                 <th>Keterangan</th>
                             </tr>
@@ -401,82 +432,118 @@
 
                         <tbody>
                             @forelse($attendances as $attendance)
-                                <tr>
-                                    <td>
-                                        <div class="flex items-center gap-3">
-                                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-sm font-extrabold text-blue-600 dark:bg-blue-500/20 dark:text-blue-300">
-                                                {{ strtoupper(substr($attendance->student->user->name, 0, 1)) }}
-                                            </div>
+                                @if($isUnattendedMode)
+                                    <tr>
+                                        <td>
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-sm font-extrabold text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                                                    {{ strtoupper(substr($attendance->user->name, 0, 1)) }}
+                                                </div>
 
-                                            <div class="min-w-0">
-                                                <div class="font-extrabold text-slate-900 dark:text-white">
-                                                    {{ $attendance->student->user->name }}
-                                                </div>
-                                                <div class="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                                                    NIS {{ $attendance->student->nis }} &middot; {{ $attendance->student->class->name }}
+                                                <div class="min-w-0">
+                                                    <div class="font-extrabold text-slate-900 dark:text-white">
+                                                        {{ $attendance->user->name }}
+                                                    </div>
+                                                    <div class="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                                        NIS {{ $attendance->nis }} &middot; {{ $attendance->class?->name ?? '-' }}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="space-y-1">
+                                        </td>
+                                        <td>
                                             <div class="font-extrabold text-slate-800 dark:text-slate-100">
-                                                {{ $attendance->attendance_date->translatedFormat('d F Y') }}
+                                                {{ $unattendedDateLabel }}
                                             </div>
-                                            <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                                                {{ substr((string) $attendance->attendance_time, 0, 5) }}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="space-y-2">
-                                            <span class="hk-badge
-                                                @if($attendance->status === 'hadir')
-                                                    bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300
-                                                @elseif($attendance->status === 'terlambat')
-                                                    bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300
-                                                @elseif($attendance->status === 'izin')
-                                                    bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300
-                                                @elseif($attendance->status === 'sakit')
-                                                    bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300
-                                                @else
-                                                    bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300
-                                                @endif
-                                            ">
-                                                {{ $attendance->status === 'alpha' ? 'ALPA' : strtoupper($attendance->status) }}
+                                        </td>
+                                        <td>
+                                            <span class="hk-badge bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                                                Belum Presensi
                                             </span>
-
-                                            <div class="text-xs font-bold
-                                                @if($attendance->approval_status === 'approved')
-                                                    text-emerald-600 dark:text-emerald-300
-                                                @elseif($attendance->approval_status === 'rejected')
-                                                    text-rose-600 dark:text-rose-300
-                                                @else
-                                                    text-amber-600 dark:text-amber-300
-                                                @endif
-                                            ">
-                                                @if($attendance->approval_status === 'approved')
-                                                    Disetujui
-                                                @elseif($attendance->approval_status === 'rejected')
-                                                    Ditolak
-                                                @else
-                                                    Menunggu
-                                                @endif
+                                        </td>
+                                        <td>
+                                            <div class="font-semibold">
+                                                {{ $attendance->descriptors_count >= 3 ? 'Siap dipindai' : 'Data wajah belum lengkap' }}
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="max-w-xs truncate font-semibold">
-                                            {{ $attendance->notes ?: '-' }}
-                                        </div>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
+                                @else
+                                    <tr>
+                                        <td>
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-sm font-extrabold text-blue-600 dark:bg-blue-500/20 dark:text-blue-300">
+                                                    {{ strtoupper(substr($attendance->student->user->name, 0, 1)) }}
+                                                </div>
+
+                                                <div class="min-w-0">
+                                                    <div class="font-extrabold text-slate-900 dark:text-white">
+                                                        {{ $attendance->student->user->name }}
+                                                    </div>
+                                                    <div class="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                                        NIS {{ $attendance->student->nis }} &middot; {{ $attendance->student->class->name }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="space-y-1">
+                                                <div class="font-extrabold text-slate-800 dark:text-slate-100">
+                                                    {{ $attendance->attendance_date->translatedFormat('d F Y') }}
+                                                </div>
+                                                <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                                    {{ substr((string) $attendance->attendance_time, 0, 5) }}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="space-y-2">
+                                                <span class="hk-badge
+                                                    @if($attendance->status === 'hadir')
+                                                        bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300
+                                                    @elseif($attendance->status === 'terlambat')
+                                                        bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300
+                                                    @elseif($attendance->status === 'izin')
+                                                        bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300
+                                                    @elseif($attendance->status === 'sakit')
+                                                        bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300
+                                                    @else
+                                                        bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300
+                                                    @endif
+                                                ">
+                                                    {{ $attendance->status === 'alpha' ? 'ALPA' : strtoupper($attendance->status) }}
+                                                </span>
+
+                                                <div class="text-xs font-bold
+                                                    @if($attendance->approval_status === 'approved')
+                                                        text-emerald-600 dark:text-emerald-300
+                                                    @elseif($attendance->approval_status === 'rejected')
+                                                        text-rose-600 dark:text-rose-300
+                                                    @else
+                                                        text-amber-600 dark:text-amber-300
+                                                    @endif
+                                                ">
+                                                    @if($attendance->approval_status === 'approved')
+                                                        Disetujui
+                                                    @elseif($attendance->approval_status === 'rejected')
+                                                        Ditolak
+                                                    @else
+                                                        Menunggu
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="max-w-xs truncate font-semibold">
+                                                {{ $attendance->notes ?: '-' }}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
                             @empty
                                 <tr>
                                     <td colspan="4">
                                         <div class="py-10 text-center">
                                             <div class="text-sm font-bold text-slate-500 dark:text-slate-400">
-                                                Tidak ada presensi untuk filter yang dipilih.
+                                                {{ $isUnattendedMode ? 'Tidak ada siswa yang belum presensi pada tanggal acuan.' : 'Tidak ada presensi untuk filter yang dipilih.' }}
                                             </div>
                                             <button
                                                 type="button"
@@ -1025,11 +1092,13 @@
                             <option value="izin">Izin</option>
                             <option value="sakit">Sakit</option>
                             <option value="alpha">Alpa</option>
+                            <option value="belum_presensi">Belum Presensi</option>
                         </select>
 
                         <select
                             wire:model="mobileApprovalFilter"
                             class="hk-input"
+                            @disabled($mobileStatusFilter === 'belum_presensi')
                         >
                             <option value="">Semua Persetujuan</option>
                             <option value="pending">Menunggu</option>

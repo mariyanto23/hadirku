@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Exports\AttendanceExport;
+use App\Exports\UnattendedStudentsExport;
 use App\Models\Attendance;
 use App\Models\SchoolClass;
 use App\Models\Student;
@@ -16,6 +17,8 @@ use Maatwebsite\Excel\Facades\Excel;
 class AttendanceReport extends Component
 {
     use WithPagination;
+
+    private const STATUS_UNATTENDED = 'belum_presensi';
 
     public $search = '';
 
@@ -57,6 +60,8 @@ class AttendanceReport extends Component
 
     public function mount(): void
     {
+        $this->setDefaultClassFilter();
+
         $this->setDateRange(
             today()->startOfMonth()->format('Y-m-d'),
             today()->endOfMonth()->format('Y-m-d')
@@ -78,6 +83,14 @@ class AttendanceReport extends Component
     public function updatingStatusFilter(): void
     {
         $this->resetPage();
+    }
+
+    public function updatedStatusFilter(): void
+    {
+        if ($this->isUnattendedMode()) {
+            $this->approvalFilter = '';
+            $this->mobileApprovalFilter = '';
+        }
     }
 
     public function updatingApprovalFilter(): void
@@ -155,6 +168,7 @@ class AttendanceReport extends Component
             'mobileDatePreset',
         ]);
 
+        $this->setDefaultClassFilter();
         $this->applyDatePreset('this_month');
 
         $this->showMobileFilterModal = false;
@@ -197,6 +211,10 @@ class AttendanceReport extends Component
             return;
         }
 
+        if ($this->mobileStatusFilter === self::STATUS_UNATTENDED) {
+            $this->mobileApprovalFilter = '';
+        }
+
         $this->classFilter = $this->mobileClassFilter;
         $this->statusFilter = $this->mobileStatusFilter;
         $this->approvalFilter = $this->mobileApprovalFilter;
@@ -225,6 +243,7 @@ class AttendanceReport extends Component
             'mobileDatePreset',
         ]);
 
+        $this->setDefaultClassFilter();
         $this->applyDatePreset('this_month');
 
         $this->showMobileFilterModal = false;
@@ -330,6 +349,16 @@ class AttendanceReport extends Component
             return null;
         }
 
+        if ($this->isUnattendedMode()) {
+            return Excel::download(
+                new UnattendedStudentsExport(
+                    $this->unattendedStudentQuery()->get(),
+                    $this->unattendedDate()
+                ),
+                $this->exportFileName('xlsx')
+            );
+        }
+
         return Excel::download(
             new AttendanceExport(
                 $this->search,
@@ -350,6 +379,24 @@ class AttendanceReport extends Component
         }
 
         $classes = $this->classes();
+
+        if ($this->isUnattendedMode()) {
+            $students = $this->unattendedStudentQuery()->get();
+
+            $pdf = Pdf::loadView('exports.attendance-report-pdf', [
+                'attendances' => collect(),
+                'unattendedStudents' => $students,
+                'unattendedMode' => true,
+                'unattendedDate' => Carbon::parse($this->unattendedDate())->translatedFormat('d F Y'),
+                'filters' => $this->activeFilters($classes),
+                'generatedAt' => now()->translatedFormat('d F Y H:i'),
+            ])->setPaper('a4', 'landscape');
+
+            return response()->streamDownload(function () use ($pdf) {
+                echo $pdf->output();
+            }, $this->exportFileName('pdf'));
+        }
+
         $attendances = $this->attendanceQuery()
             ->latest()
             ->get();
@@ -377,28 +424,28 @@ class AttendanceReport extends Component
         }
 
         return $query->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->whereHas(
-                        'student.user',
-                        function ($userQuery) {
-                            $userQuery->where(
-                                'name',
-                                'like',
-                                '%'.$this->search.'%'
-                            );
-                        }
-                    )->orWhereHas(
-                        'student',
-                        function ($studentQuery) {
-                            $studentQuery->where(
-                                'nis',
-                                'like',
-                                '%'.$this->search.'%'
-                            );
-                        }
-                    );
-                });
-            })
+            $query->where(function ($q) {
+                $q->whereHas(
+                    'student.user',
+                    function ($userQuery) {
+                        $userQuery->where(
+                            'name',
+                            'like',
+                            '%'.$this->search.'%'
+                        );
+                    }
+                )->orWhereHas(
+                    'student',
+                    function ($studentQuery) {
+                        $studentQuery->where(
+                            'nis',
+                            'like',
+                            '%'.$this->search.'%'
+                        );
+                    }
+                );
+            });
+        })
             ->when($this->classFilter, function ($query) {
                 $query->whereHas(
                     'student',
@@ -410,10 +457,10 @@ class AttendanceReport extends Component
                     }
                 );
             })
-            ->when($this->statusFilter, function ($query) {
+            ->when($this->attendanceStatusFilter(), function ($query) {
                 $query->where(
                     'status',
-                    $this->statusFilter
+                    $this->attendanceStatusFilter()
                 );
             })
             ->when($this->approvalFilter, function ($query) {
@@ -443,6 +490,69 @@ class AttendanceReport extends Component
         return SchoolClass::query()
             ->orderBy('name')
             ->get();
+    }
+
+    private function setDefaultClassFilter(): void
+    {
+        $this->classFilter = (string) (SchoolClass::query()
+            ->orderBy('name')
+            ->value('id') ?: '');
+        $this->mobileClassFilter = $this->classFilter;
+    }
+
+    private function isUnattendedMode(): bool
+    {
+        return $this->statusFilter === self::STATUS_UNATTENDED;
+    }
+
+    private function attendanceStatusFilter(): string
+    {
+        return $this->isUnattendedMode() ? '' : $this->statusFilter;
+    }
+
+    private function unattendedDate(): string
+    {
+        $today = today()->toDateString();
+        $start = $this->dateStartFilter;
+        $end = $this->dateEndFilter;
+
+        if ($start && $end && $start === $end) {
+            return $start;
+        }
+
+        if ($start && $today < $start) {
+            return $start;
+        }
+
+        if ($end && $today > $end) {
+            return $end;
+        }
+
+        return $today;
+    }
+
+    private function unattendedStudentQuery()
+    {
+        $attendanceDate = $this->unattendedDate();
+
+        return Student::query()
+            ->with(['user', 'class'])
+            ->withCount('descriptors')
+            ->when($this->classFilter, function ($query) {
+                $query->where('class_id', $this->classFilter);
+            })
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->whereHas('user', function ($userQuery) {
+                        $userQuery->where('name', 'like', '%'.$this->search.'%');
+                    })->orWhere('nis', 'like', '%'.$this->search.'%');
+                });
+            })
+            ->whereDoesntHave('attendances', function ($query) use ($attendanceDate) {
+                $query->whereDate('attendance_date', $attendanceDate);
+            })
+            ->orderBy('class_id')
+            ->orderBy('nis');
     }
 
     private function dateRangeIsValid(?string $start, ?string $end): bool
@@ -540,8 +650,13 @@ class AttendanceReport extends Component
                 'izin' => 'Izin',
                 'sakit' => 'Sakit',
                 'alpha' => 'Alpa',
+                self::STATUS_UNATTENDED => 'Belum Presensi',
                 default => '-',
             };
+        }
+
+        if ($this->isUnattendedMode()) {
+            $filters[] = 'Tanggal acuan: '.Carbon::parse($this->unattendedDate())->translatedFormat('d F Y');
         }
 
         if ($this->approvalFilter) {
@@ -701,12 +816,15 @@ class AttendanceReport extends Component
 
     public function render()
     {
-        $summaryQuery = $this->attendanceQuery();
         $classes = $this->classes();
-        $attendances = $this->attendanceQuery()
-            ->latest()
-            ->paginate(10);
-        $selectedAttendance = $this->selectedAttendanceId
+        $isUnattendedMode = $this->isUnattendedMode();
+        $summaryQuery = $this->attendanceQuery();
+        $attendances = $isUnattendedMode
+            ? $this->unattendedStudentQuery()->paginate(10)
+            : $this->attendanceQuery()
+                ->latest()
+                ->paginate(10);
+        $selectedAttendance = (! $isUnattendedMode && $this->selectedAttendanceId)
             ? Attendance::query()
                 ->with([
                     'student.user',
@@ -721,13 +839,15 @@ class AttendanceReport extends Component
 
             'attendances' => $attendances,
 
-            'resultText' => $attendances->total().' data ditemukan',
+            'resultText' => $isUnattendedMode
+                ? $attendances->total().' siswa belum presensi'
+                : $attendances->total().' data ditemukan',
 
             'summary' => [
-                'total' => (clone $summaryQuery)->count(),
-                'present' => (clone $summaryQuery)->where('status', 'hadir')->count(),
-                'late' => (clone $summaryQuery)->where('status', 'terlambat')->count(),
-                'absent' => (clone $summaryQuery)->where('status', 'alpha')->count(),
+                'total' => $isUnattendedMode ? $attendances->total() : (clone $summaryQuery)->count(),
+                'present' => $isUnattendedMode ? 0 : (clone $summaryQuery)->where('status', 'hadir')->count(),
+                'late' => $isUnattendedMode ? 0 : (clone $summaryQuery)->where('status', 'terlambat')->count(),
+                'absent' => $isUnattendedMode ? 0 : (clone $summaryQuery)->where('status', 'alpha')->count(),
             ],
 
             'activeFilterCount' => collect([
@@ -742,6 +862,10 @@ class AttendanceReport extends Component
             'activeFilters' => $this->activeFilters($classes),
 
             'attendanceTrend' => $this->attendanceTrend(),
+
+            'isUnattendedMode' => $isUnattendedMode,
+
+            'unattendedDateLabel' => Carbon::parse($this->unattendedDate())->translatedFormat('d F Y'),
 
         ]);
     }
