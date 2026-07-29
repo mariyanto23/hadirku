@@ -189,7 +189,7 @@
                                     </div>
                                 </div>
 
-                                <div class="flex shrink-0 items-center gap-0.5">
+                                <div class="grid w-20 shrink-0 grid-cols-2 place-items-center gap-1">
                                     <a
                                         href="{{ route('admin.face-registration', ['student' => $student->id]) }}"
                                         class="flex h-8 w-8 items-center justify-center rounded-xl text-slate-500 transition hover:bg-blue-50 hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
