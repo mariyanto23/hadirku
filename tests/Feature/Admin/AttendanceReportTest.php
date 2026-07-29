@@ -16,11 +16,11 @@ class AttendanceReportTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_attendance_report_defaults_to_first_class(): void
+    public function test_admin_attendance_report_defaults_to_all_classes(): void
     {
         Role::create(['name' => 'admin']);
 
-        $firstClass = SchoolClass::create(['name' => 'Kelas 1']);
+        SchoolClass::create(['name' => 'Kelas 1']);
         SchoolClass::create(['name' => 'Kelas 2']);
 
         $admin = User::factory()->create();
@@ -28,7 +28,8 @@ class AttendanceReportTest extends TestCase
 
         Livewire::actingAs($admin)
             ->test(AdminAttendanceReport::class)
-            ->assertSet('classFilter', (string) $firstClass->id);
+            ->assertSet('classFilter', '')
+            ->assertSee('Semua Kelas');
     }
 
     public function test_admin_can_filter_unattended_students_without_creating_attendance_status(): void

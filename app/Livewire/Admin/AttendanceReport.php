@@ -494,9 +494,7 @@ class AttendanceReport extends Component
 
     private function setDefaultClassFilter(): void
     {
-        $this->classFilter = (string) (SchoolClass::query()
-            ->orderBy('name')
-            ->value('id') ?: '');
+        $this->classFilter = '';
         $this->mobileClassFilter = $this->classFilter;
     }
 
