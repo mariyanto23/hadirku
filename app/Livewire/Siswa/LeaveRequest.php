@@ -26,6 +26,10 @@ class LeaveRequest extends Component
 
     public $attachment;
 
+    protected array $validationAttributes = [
+        'attachment' => 'lampiran',
+    ];
+
     protected function rules(): array
     {
         return [
@@ -39,6 +43,15 @@ class LeaveRequest extends Component
     public function mount(): void
     {
         $this->attendance_date = today()->format('Y-m-d');
+    }
+
+    public function updatedAttachment(): void
+    {
+        $this->resetValidation('attachment');
+
+        if ($this->attachment) {
+            $this->validateOnly('attachment');
+        }
     }
 
     public function resetForm(): void

@@ -2,9 +2,35 @@
     x-data="{
         formOpen: @entangle('showFormModal'),
         filterOpen: @entangle('showMobileFilterModal'),
-        detailOpen: @entangle('showAttendanceDetailModal')
+        detailOpen: @entangle('showAttendanceDetailModal'),
+        attachmentPreview: {
+            open: false,
+            url: '',
+            name: ''
+        },
+        previewAttachment(url, name, isImage) {
+            if (!url) {
+                return;
+            }
+
+            if (!isImage) {
+                window.open(url, '_blank', 'noopener');
+                return;
+            }
+
+            this.attachmentPreview = {
+                open: true,
+                url,
+                name
+            };
+        },
+        closeAttachmentPreview() {
+            this.attachmentPreview.open = false;
+            this.attachmentPreview.url = '';
+            this.attachmentPreview.name = '';
+        }
     }"
-    x-on:keydown.escape.window="if (formOpen) $wire.closeFormModal(); else if (filterOpen) $wire.closeMobileFilters(); else if (detailOpen) $wire.closeAttendanceDetail()"
+    x-on:keydown.escape.window="if (attachmentPreview.open) closeAttachmentPreview(); else if (formOpen) $wire.closeFormModal(); else if (filterOpen) $wire.closeMobileFilters(); else if (detailOpen) $wire.closeAttendanceDetail()"
 >
     <div class="hk-page max-w-6xl">
         <section class="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
@@ -320,10 +346,9 @@
                             </span>
 
                             @if($attendance->attachment_path)
-                                <a
-                                    href="{{ $attendance->attachmentUrl() }}"
-                                    target="_blank"
-                                    rel="noopener"
+                                <button
+                                    type="button"
+                                    x-on:click="previewAttachment(@js($attendance->attachmentUrl()), @js($attendance->attachmentDisplayName()), @js($attendance->attachmentIsImage()))"
                                     class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-700 transition hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30"
                                     title="Lihat lampiran"
                                     aria-label="Lihat lampiran"
@@ -331,7 +356,7 @@
                                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
                                     </svg>
-                                </a>
+                                </button>
                             @endif
                         </div>
 
@@ -350,17 +375,16 @@
                             @endif
 
                             @if($attendance->attachment_path)
-                                <a
-                                    href="{{ $attendance->attachmentUrl() }}"
-                                    target="_blank"
-                                    rel="noopener"
+                                <button
+                                    type="button"
+                                    x-on:click="previewAttachment(@js($attendance->attachmentUrl()), @js($attendance->attachmentDisplayName()), @js($attendance->attachmentIsImage()))"
                                     class="mt-2 inline-flex items-center gap-1 text-xs font-extrabold text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200"
                                 >
                                     <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
                                     </svg>
                                     Lihat Lampiran
-                                </a>
+                                </button>
                             @endif
                         </div>
 
@@ -600,17 +624,16 @@
                                         @endif
 
                                         @if($attendance->attachment_path)
-                                            <a
-                                                href="{{ $attendance->attachmentUrl() }}"
-                                                target="_blank"
-                                                rel="noopener"
+                                            <button
+                                                type="button"
+                                                x-on:click="previewAttachment(@js($attendance->attachmentUrl()), @js($attendance->attachmentDisplayName()), @js($attendance->attachmentIsImage()))"
                                                 class="inline-flex items-center gap-1 text-xs font-extrabold text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200"
                                             >
                                                 <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
                                                 </svg>
                                                 Lihat Lampiran
-                                            </a>
+                                            </button>
                                         @endif
                                     </div>
                                 </td>
@@ -618,10 +641,9 @@
                                 <td class="w-40 px-5 py-4">
                                     <div class="mx-auto flex w-32 flex-wrap justify-center gap-2">
                                         @if($attendance->attachment_path)
-                                            <a
-                                                href="{{ $attendance->attachmentUrl() }}"
-                                                target="_blank"
-                                                rel="noopener"
+                                            <button
+                                                type="button"
+                                                x-on:click="previewAttachment(@js($attendance->attachmentUrl()), @js($attendance->attachmentDisplayName()), @js($attendance->attachmentIsImage()))"
                                                 class="flex h-10 w-10 items-center justify-center rounded-2xl text-slate-500 transition hover:bg-blue-50 hover:text-blue-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-blue-300"
                                                 title="Lihat lampiran"
                                                 aria-label="Lihat lampiran"
@@ -629,7 +651,7 @@
                                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
                                                 </svg>
-                                            </a>
+                                            </button>
                                         @endif
 
                                         @if($attendance->approval_status === 'pending')
@@ -827,6 +849,65 @@
         </div>
     @endif
 
+    <div
+        x-show="attachmentPreview.open"
+        x-transition.opacity
+        x-cloak
+        class="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm"
+    >
+        <button
+            type="button"
+            x-on:click="closeAttachmentPreview()"
+            class="absolute inset-0"
+            aria-label="Tutup pratinjau lampiran"
+        ></button>
+
+        <section class="relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-950">
+            <div class="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+                <div class="min-w-0">
+                    <div class="text-sm font-extrabold text-slate-900 dark:text-white">
+                        Pratinjau Lampiran
+                    </div>
+                    <div class="mt-0.5 truncate text-xs font-semibold text-slate-500 dark:text-slate-400" x-text="attachmentPreview.name || 'Lampiran'"></div>
+                </div>
+
+                <div class="flex shrink-0 items-center gap-2">
+                    <a
+                        x-bind:href="attachmentPreview.url"
+                        target="_blank"
+                        rel="noopener"
+                        class="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-100 text-blue-700 transition hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30"
+                        title="Buka di tab baru"
+                        aria-label="Buka lampiran di tab baru"
+                    >
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h10v10M7 17 17 7" />
+                        </svg>
+                    </a>
+
+                    <button
+                        type="button"
+                        x-on:click="closeAttachmentPreview()"
+                        class="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 transition hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                        aria-label="Tutup pratinjau lampiran"
+                    >
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="min-h-0 overflow-auto bg-slate-950/95 p-3">
+                <img
+                    x-bind:src="attachmentPreview.url"
+                    x-bind:alt="attachmentPreview.name || 'Lampiran'"
+                    class="mx-auto max-h-[72vh] w-auto max-w-full rounded-xl object-contain"
+                >
+            </div>
+        </section>
+    </div>
+
     @if($showAttendanceDetailModal && $selectedAttendance)
         @php
             $detailSource = 'Manual';
@@ -968,17 +1049,16 @@
 
                 <div class="mt-4 grid grid-cols-2 gap-2">
                     @if($selectedAttendance->attachment_path)
-                        <a
-                            href="{{ $selectedAttendance->attachmentUrl() }}"
-                            target="_blank"
-                            rel="noopener"
+                        <button
+                            type="button"
+                            x-on:click="previewAttachment(@js($selectedAttendance->attachmentUrl()), @js($selectedAttendance->attachmentDisplayName()), @js($selectedAttendance->attachmentIsImage()))"
                             class="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-blue-100 px-3 py-2 text-xs font-extrabold text-blue-700 transition hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30"
                         >
                             <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
                             </svg>
                             Lampiran
-                        </a>
+                        </button>
                     @endif
 
                     <button
@@ -1123,17 +1203,16 @@
                                 <div class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                                     Lampiran Saat Ini
                                 </div>
-                                <a
-                                    href="{{ asset('storage/' . $existingAttachmentPath) }}"
-                                    target="_blank"
-                                    rel="noopener"
+                                <button
+                                    type="button"
+                                    x-on:click="previewAttachment(@js(asset('storage/' . $existingAttachmentPath)), @js($existingAttachmentName ?: 'Lampiran'), @js($existingAttachmentIsImage))"
                                     class="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-2xl bg-blue-100 px-4 py-2 text-sm font-extrabold text-blue-700 transition hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30"
                                 >
                                     <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
                                     </svg>
                                     Buka Lampiran
-                                </a>
+                                </button>
 
                                 @if($existingAttachmentName)
                                     <div class="mt-2 truncate text-xs font-bold text-slate-500 dark:text-slate-400">

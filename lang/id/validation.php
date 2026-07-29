@@ -63,6 +63,14 @@ return [
     'uploaded' => ':attribute gagal diunggah. Periksa ukuran dan format berkas, lalu coba lagi.',
     'url' => ':attribute harus berupa URL yang valid.',
 
+    'custom' => [
+        'attachment' => [
+            'max' => 'Lampiran tidak boleh lebih besar dari :max kilobita.',
+            'mimes' => 'Lampiran harus berupa berkas dengan format: :values.',
+            'uploaded' => 'Lampiran gagal diunggah. Periksa ukuran dan format berkas, lalu coba lagi.',
+        ],
+    ],
+
     'attributes' => [
         'attachment' => 'lampiran',
         'attendance_date' => 'tanggal',

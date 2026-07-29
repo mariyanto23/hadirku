@@ -36,9 +36,15 @@ class ManualAttendance extends Component
 
     public bool $removeAttachment = false;
 
+    protected array $validationAttributes = [
+        'attachment' => 'lampiran',
+    ];
+
     public ?string $existingAttachmentPath = null;
 
     public ?string $existingAttachmentName = null;
+
+    public bool $existingAttachmentIsImage = false;
 
     public $search = '';
 
@@ -126,6 +132,15 @@ class ManualAttendance extends Component
     public function updatedSelectedClass(): void
     {
         $this->student_id = '';
+    }
+
+    public function updatedAttachment(): void
+    {
+        $this->resetValidation('attachment');
+
+        if ($this->attachment) {
+            $this->validateOnly('attachment');
+        }
     }
 
     public function viewAllApprovals(): void
@@ -226,6 +241,7 @@ class ManualAttendance extends Component
             'removeAttachment',
             'existingAttachmentPath',
             'existingAttachmentName',
+            'existingAttachmentIsImage',
             'isEdit',
         ]);
 
@@ -380,6 +396,7 @@ class ManualAttendance extends Component
         $this->removeAttachment = false;
         $this->existingAttachmentPath = $attendance->attachment_path;
         $this->existingAttachmentName = $attendance->attachment_name;
+        $this->existingAttachmentIsImage = $attendance->attachmentIsImage();
         $this->isEdit = true;
         $this->showFormModal = true;
 

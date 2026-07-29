@@ -51,4 +51,21 @@ class Attendance extends Model
             ? Storage::disk('public')->url($this->attachment_path)
             : null;
     }
+
+    public function attachmentDisplayName(): string
+    {
+        return $this->attachment_name ?: basename((string) $this->attachment_path);
+    }
+
+    public function attachmentIsImage(): bool
+    {
+        $extension = strtolower(pathinfo((string) $this->attachment_path, PATHINFO_EXTENSION));
+
+        return in_array($extension, [
+            'jpg',
+            'jpeg',
+            'png',
+            'webp',
+        ], true);
+    }
 }
