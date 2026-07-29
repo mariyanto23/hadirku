@@ -91,6 +91,27 @@
                         @enderror
                     </div>
 
+                    <div>
+                        <label class="hk-label">Lampiran <span class="font-semibold text-slate-400">(opsional)</span></label>
+                        <input
+                            type="file"
+                            wire:model="attachment"
+                            accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+                            class="hk-input file:mr-4 file:rounded-xl file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-bold file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-slate-800 dark:file:text-blue-300"
+                        >
+                        <div class="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                            Format PDF, JPG, PNG, atau WebP. Maksimal 2 MB.
+                        </div>
+                        @if($attachment)
+                            <div class="mt-2 truncate text-xs font-bold text-blue-600 dark:text-blue-300">
+                                {{ $attachment->getClientOriginalName() }}
+                            </div>
+                        @endif
+                        @error('attachment')
+                            <div class="hk-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <button
                         type="submit"
                         wire:loading.attr="disabled"
@@ -172,8 +193,24 @@
                                     </td>
 
                                     <td class="px-5 py-4">
-                                        <div class="max-w-xs truncate font-semibold text-slate-600 dark:text-slate-300">
-                                            {{ $request->notes ?: '-' }}
+                                        <div class="max-w-xs space-y-1 font-semibold text-slate-600 dark:text-slate-300">
+                                            <div class="truncate">
+                                                {{ $request->notes ?: '-' }}
+                                            </div>
+
+                                            @if($request->attachment_path)
+                                                <a
+                                                    href="{{ $request->attachmentUrl() }}"
+                                                    target="_blank"
+                                                    rel="noopener"
+                                                    class="inline-flex items-center gap-1 text-xs font-extrabold text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200"
+                                                >
+                                                    <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
+                                                    </svg>
+                                                    Lihat Lampiran
+                                                </a>
+                                            @endif
                                         </div>
                                     </td>
 

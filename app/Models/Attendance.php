@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class Attendance extends Model
 {
@@ -15,6 +16,8 @@ class Attendance extends Model
         'confidence_score',
         'match_threshold_used',
         'notes',
+        'attachment_path',
+        'attachment_name',
         'approval_status',
         'requested_by_user_id',
         'reviewed_by_user_id',
@@ -40,5 +43,12 @@ class Attendance extends Model
     public function reviewedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by_user_id');
+    }
+
+    public function attachmentUrl(): ?string
+    {
+        return $this->attachment_path
+            ? Storage::disk('public')->url($this->attachment_path)
+            : null;
     }
 }

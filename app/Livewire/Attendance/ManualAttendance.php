@@ -7,12 +7,15 @@ use App\Models\SchoolClass;
 use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 class ManualAttendance extends Component
 {
+    use WithFileUploads;
     use WithPagination;
 
     public $attendanceId;
@@ -28,6 +31,14 @@ class ManualAttendance extends Component
     public $status = 'izin';
 
     public $notes = '';
+
+    public $attachment;
+
+    public bool $removeAttachment = false;
+
+    public ?string $existingAttachmentPath = null;
+
+    public ?string $existingAttachmentName = null;
 
     public $search = '';
 
@@ -78,6 +89,8 @@ class ManualAttendance extends Component
             'notes' => $this->isEdit
                 ? ['required', 'string', 'min:3', 'max:1000']
                 : ['nullable', 'string', 'max:1000'],
+            'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'removeAttachment' => ['boolean'],
         ];
     }
 
@@ -199,6 +212,10 @@ class ManualAttendance extends Component
             'student_id',
             'status',
             'notes',
+            'attachment',
+            'removeAttachment',
+            'existingAttachmentPath',
+            'existingAttachmentName',
             'isEdit',
         ]);
 
@@ -256,12 +273,22 @@ class ManualAttendance extends Component
             return;
         }
 
-        DB::transaction(function () use ($approvalStatus) {
+        $attachmentPath = $this->attachment
+            ? $this->attachment->store('leave-attachments', 'public')
+            : null;
+
+        $attachmentName = $this->attachment
+            ? $this->attachment->getClientOriginalName()
+            : null;
+
+        $oldAttachmentToDelete = null;
+
+        DB::transaction(function () use ($approvalStatus, $attachmentPath, $attachmentName, &$oldAttachmentToDelete) {
             if ($this->isEdit) {
                 $attendance = Attendance::query()
                     ->findOrFail($this->attendanceId);
 
-                $attendance->update([
+                $updates = [
                     'student_id' => $this->student_id,
                     'attendance_date' => $this->attendance_date,
                     'attendance_time' => $this->attendance_time.':00',
@@ -273,7 +300,19 @@ class ManualAttendance extends Component
                     'review_notes' => $approvalStatus === 'rejected'
                         ? 'Status dikoreksi menjadi alpa oleh '.Auth::user()->name.'.'
                         : null,
-                ]);
+                ];
+
+                if ($attachmentPath) {
+                    $oldAttachmentToDelete = $attendance->attachment_path;
+                    $updates['attachment_path'] = $attachmentPath;
+                    $updates['attachment_name'] = $attachmentName;
+                } elseif ($this->removeAttachment) {
+                    $oldAttachmentToDelete = $attendance->attachment_path;
+                    $updates['attachment_path'] = null;
+                    $updates['attachment_name'] = null;
+                }
+
+                $attendance->update($updates);
 
                 $message = 'Presensi berhasil dikoreksi.';
             } else {
@@ -285,6 +324,8 @@ class ManualAttendance extends Component
                     'confidence_score' => null,
                     'match_threshold_used' => null,
                     'notes' => $this->notes ?: null,
+                    'attachment_path' => $attachmentPath,
+                    'attachment_name' => $attachmentName,
                     'approval_status' => 'approved',
                     'reviewed_by_user_id' => Auth::id(),
                     'reviewed_at' => now(),
@@ -299,6 +340,10 @@ class ManualAttendance extends Component
                 message: $message
             );
         });
+
+        if ($oldAttachmentToDelete) {
+            Storage::disk('public')->delete($oldAttachmentToDelete);
+        }
 
         $this->approvalFilter = $approvalStatus;
         $this->resetForm();
@@ -318,6 +363,10 @@ class ManualAttendance extends Component
         $this->attendance_time = substr((string) $attendance->attendance_time, 0, 5);
         $this->status = $attendance->status;
         $this->notes = $attendance->notes;
+        $this->attachment = null;
+        $this->removeAttachment = false;
+        $this->existingAttachmentPath = $attendance->attachment_path;
+        $this->existingAttachmentName = $attendance->attachment_name;
         $this->isEdit = true;
         $this->showFormModal = true;
 

@@ -311,7 +311,27 @@
                                             <span class="hk-badge {{ $approvalBadge($attendance->approval_status) }}">{{ $approvalLabel($attendance->approval_status) }}</span>
                                         </div>
                                     </td>
-                                    <td>{{ $attendance->notes ?: '-' }}</td>
+                                    <td>
+                                        <div class="max-w-xs space-y-1 font-semibold">
+                                            <div class="truncate">
+                                                {{ $attendance->notes ?: '-' }}
+                                            </div>
+
+                                            @if($attendance->attachment_path)
+                                                <a
+                                                    href="{{ $attendance->attachmentUrl() }}"
+                                                    target="_blank"
+                                                    rel="noopener"
+                                                    class="inline-flex items-center gap-1 text-xs font-extrabold text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200"
+                                                >
+                                                    <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
+                                                    </svg>
+                                                    Lihat Lampiran
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </td>
                                 </tr>
                             @endif
                         @empty
@@ -362,6 +382,20 @@
                     <div class="mt-3 rounded-2xl border border-slate-100 bg-white/70 p-3 dark:border-slate-800 dark:bg-slate-900/45">
                         <div class="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">Keterangan</div>
                         <div class="mt-1 break-words text-sm font-semibold leading-5 text-slate-600 dark:text-slate-300">{{ $selectedAttendance->notes ?: '-' }}</div>
+
+                        @if($selectedAttendance->attachment_path)
+                            <a
+                                href="{{ $selectedAttendance->attachmentUrl() }}"
+                                target="_blank"
+                                rel="noopener"
+                                class="mt-2 inline-flex items-center gap-1 text-xs font-extrabold text-blue-600 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-200"
+                            >
+                                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.82-2.82l8.48-8.49" />
+                                </svg>
+                                Lihat Lampiran
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>

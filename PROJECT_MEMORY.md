@@ -107,7 +107,7 @@ Status presensi otomatis:
 - Pada tanggal libur akademik dengan `allow_attendance = false`, presensi wajah ditolak, pengajuan izin/sakit siswa ditolak, dan alpa otomatis dilewati. Jika `allow_attendance = true`, presensi tetap boleh berjalan pada tanggal libur tersebut.
 - Hari sekolah disimpan di `attendance_settings.school_days` sebagai angka ISO hari: 1 Senin sampai 7 Minggu. Defaultnya Senin-Sabtu agar perilaku lama tetap aman.
 
-Siswa dapat mengajukan `izin` atau `sakit`. Pengajuan masuk sebagai `approval_status = pending`. Admin/guru dapat menyetujui atau menolak lewat halaman manual attendance. Jika ditolak, status teknis diubah menjadi `alpha` dengan label UI `alpa`, dan approval menjadi `rejected`. Jika koreksi presensi manual mengubah status menjadi `alpha`/alpa, approval juga harus menjadi `rejected`.
+Siswa dapat mengajukan `izin` atau `sakit`. Pengajuan masuk sebagai `approval_status = pending`. Lampiran pengajuan bersifat opsional, disimpan di `attendances.attachment_path` dan `attendances.attachment_name` pada disk `public` folder `leave-attachments`; format yang didukung PDF/JPG/PNG/WebP maksimal 2 MB. Admin/guru dapat menyetujui atau menolak lewat halaman manual attendance. Jika ditolak, status teknis diubah menjadi `alpha` dengan label UI `alpa`, dan approval menjadi `rejected`. Jika koreksi presensi manual mengubah status menjadi `alpha`/alpa, approval juga harus menjadi `rejected`.
 
 ## Batas Arsitektur yang Wajib Dijaga
 

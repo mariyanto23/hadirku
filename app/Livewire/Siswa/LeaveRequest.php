@@ -7,12 +7,15 @@ use App\Models\AcademicHoliday;
 use App\Models\AttendanceSetting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 class LeaveRequest extends Component
 {
+    use WithFileUploads;
     use WithPagination;
 
     public $attendance_date;
@@ -21,12 +24,15 @@ class LeaveRequest extends Component
 
     public $notes = '';
 
+    public $attachment;
+
     protected function rules(): array
     {
         return [
             'attendance_date' => ['required', 'date'],
             'status' => ['required', Rule::in(['izin', 'sakit'])],
             'notes' => ['required', 'string', 'min:5', 'max:1000'],
+            'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
         ];
     }
 
@@ -40,6 +46,7 @@ class LeaveRequest extends Component
         $this->reset([
             'status',
             'notes',
+            'attachment',
         ]);
 
         $this->status = 'izin';
@@ -118,8 +125,22 @@ class LeaveRequest extends Component
             return;
         }
 
-        DB::transaction(function () use ($student, $existing) {
+        $attachmentPath = $this->attachment
+            ? $this->attachment->store('leave-attachments', 'public')
+            : null;
+
+        $attachmentName = $this->attachment
+            ? $this->attachment->getClientOriginalName()
+            : null;
+
+        $oldAttachmentToDelete = null;
+
+        DB::transaction(function () use ($student, $existing, $attachmentPath, $attachmentName, &$oldAttachmentToDelete) {
             if ($existing && $existing->approval_status === 'rejected') {
+                if ($attachmentPath) {
+                    $oldAttachmentToDelete = $existing->attachment_path;
+                }
+
                 $existing->update([
                     'attendance_date' => $this->attendance_date,
                     'attendance_time' => now()->format('H:i:s'),
@@ -132,6 +153,10 @@ class LeaveRequest extends Component
                     'reviewed_by_user_id' => null,
                     'reviewed_at' => null,
                     'review_notes' => null,
+                    ...($attachmentPath ? [
+                        'attachment_path' => $attachmentPath,
+                        'attachment_name' => $attachmentName,
+                    ] : []),
                 ]);
             } else {
                 Attendance::query()->create([
@@ -142,11 +167,17 @@ class LeaveRequest extends Component
                     'confidence_score' => null,
                     'match_threshold_used' => null,
                     'notes' => $this->notes,
+                    'attachment_path' => $attachmentPath,
+                    'attachment_name' => $attachmentName,
                     'approval_status' => 'pending',
                     'requested_by_user_id' => Auth::id(),
                 ]);
             }
         });
+
+        if ($oldAttachmentToDelete) {
+            Storage::disk('public')->delete($oldAttachmentToDelete);
+        }
 
         $this->dispatch(
             'hadirku-toast',
