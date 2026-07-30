@@ -486,9 +486,15 @@
 
         let labeledDescriptors = [];
 
+        const descriptorCache = new Map();
+
+        const descriptorCacheTtl = 5 * 60 * 1000;
+
         let processing = false;
 
         let modelsLoaded = false;
+
+        let modelLoadingPromise = null;
 
         let lastUnknownSoundAt = 0;
 
@@ -499,6 +505,20 @@
         let scanStarting = false;
 
         let scanSessionId = 0;
+
+        const configuredScanInterval =
+            {{ $settings->scan_interval }};
+
+        const fastScanDelay =
+            Math.max(350, Math.min(configuredScanInterval, 650));
+
+        const normalScanDelay =
+            Math.max(650, configuredScanInterval);
+
+        const detectorInputSize =
+            window.matchMedia('(max-width: 767px)').matches ? 224 : 256;
+
+        let lastScanStatusText = '';
 
         const cameraModeStorageKey =
             'hadirkuFaceAttendanceFacingMode';
@@ -685,6 +705,11 @@
         }
 
         function setStatus(text, color = 'slate') {
+            if (lastScanStatusText === `${text}:${color}`) {
+                return;
+            }
+
+            lastScanStatusText = `${text}:${color}`;
             scanStatus.textContent = text;
 
             scanDot.className = 'mr-2 inline-block h-2 w-2 rounded-full';
@@ -707,29 +732,76 @@
             scanDot.classList.add('bg-slate-400');
         }
 
-        async function loadModels() {
+        function getDetectorOptions() {
+            return new faceapi.TinyFaceDetectorOptions({
+                inputSize: detectorInputSize,
+                scoreThreshold: 0.45,
+            });
+        }
+
+        async function loadModels(silent = false) {
 
             if (modelsLoaded) return;
 
-            setStatus('Memuat pustaka wajah', 'blue');
+            if (modelLoadingPromise) {
+                if (!silent) {
+                    setStatus('Memuat model wajah', 'blue');
+                }
 
-            await window.loadHadirkuFaceApi();
+                await modelLoadingPromise;
 
-            setStatus('Memuat model wajah', 'blue');
+                if (!silent) {
+                    setStatus('Model siap digunakan', 'green');
+                }
 
-            await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+                return;
+            }
 
-            await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+            if (!silent) {
+                setStatus('Memuat pustaka wajah', 'blue');
+            }
 
-            await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+            modelLoadingPromise = (async () => {
+                await window.loadHadirkuFaceApi();
 
-            modelsLoaded = true;
+                if (!silent) {
+                    setStatus('Memuat model wajah', 'blue');
+                }
 
-            setStatus('Model siap digunakan', 'green');
+                await Promise.all([
+                    faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+                    faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+                    faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+                ]);
+
+                modelsLoaded = true;
+            })();
+
+            try {
+                await modelLoadingPromise;
+            } finally {
+                modelLoadingPromise = null;
+            }
+
+            if (!silent) {
+                setStatus('Model siap digunakan', 'green');
+            }
 
         }
 
         async function loadDescriptors(classId) {
+
+            const cachedDescriptors =
+                descriptorCache.get(String(classId));
+
+            if (
+                cachedDescriptors
+                && Date.now() - cachedDescriptors.loadedAt < descriptorCacheTtl
+            ) {
+                labeledDescriptors = cachedDescriptors.descriptors;
+                setStatus(`${labeledDescriptors.length} siswa siap dipindai`, 'green');
+                return;
+            }
 
             setStatus('Memuat descriptor kelas', 'blue');
 
@@ -757,6 +829,11 @@
                     );
 
                 });
+
+            descriptorCache.set(String(classId), {
+                loadedAt: Date.now(),
+                descriptors: labeledDescriptors,
+            });
 
             setStatus(`${labeledDescriptors.length} siswa siap dipindai`, 'green');
 
@@ -901,6 +978,20 @@
         updateCameraToggle(!attendanceCanScan);
         updateMobileScanToggle();
 
+        if (attendanceCanScan) {
+            const warmUpModels = () => {
+                loadModels(true).catch(() => {});
+            };
+
+            if ('requestIdleCallback' in window) {
+                window.requestIdleCallback(warmUpModels, {
+                    timeout: 3000,
+                });
+            } else {
+                setTimeout(warmUpModels, 1200);
+            }
+        }
+
         async function toggleCameraFacingMode() {
             if (!attendanceCanScan || switchingCamera || !scanActive || !video.srcObject) {
                 return;
@@ -937,7 +1028,7 @@
                     });
                     setStatus('Pemindaian aktif', 'green');
                 } catch (restoreError) {
-                    clearInterval(scanInterval);
+                    clearTimeout(scanInterval);
                     scanInterval = null;
                     setScanningState(false);
                     setStatus('Kamera gagal aktif', 'red');
@@ -1051,100 +1142,143 @@
                         {{ $settings->face_match_threshold }}
                     );
 
-                scanInterval = setInterval(async () => {
+                const scheduleNextScan = (delay = normalScanDelay) => {
+                    if (
+                        sessionId !== scanSessionId
+                        || !scanActive
+                        || !video.srcObject
+                    ) {
+                        return;
+                    }
 
-                    if (processing) return;
+                    clearTimeout(scanInterval);
+                    scanInterval = setTimeout(runScanLoop, delay);
+                };
 
-                    const detection =
-                        await faceapi
-                            .detectSingleFace(
-                                video,
-                                new faceapi.TinyFaceDetectorOptions({
-                                    inputSize: 320,
-                                    scoreThreshold: 0.5,
-                                })
-                            )
-                            .withFaceLandmarks()
-                            .withFaceDescriptor();
+                const releaseProcessingLater = (delay) => {
+                    setTimeout(() => {
+                        processing = false;
+                        scheduleNextScan(normalScanDelay);
+                    }, delay);
+                };
 
-                    if (!detection) {
-                        clearFaceOverlay();
-                        setStatus('Mencari wajah', 'blue');
+                const runScanLoop = async () => {
+                    if (
+                        sessionId !== scanSessionId
+                        || !scanActive
+                        || !video.srcObject
+                    ) {
+                        processing = false;
+                        return;
+                    }
+
+                    if (processing) {
+                        scheduleNextScan(normalScanDelay);
                         return;
                     }
 
                     processing = true;
-                    drawFaceOverlay(detection, 'Wajah terdeteksi', '#38bdf8');
 
-                    setStatus('Wajah terdeteksi', 'blue');
+                    try {
+                        const detection =
+                            await faceapi
+                                .detectSingleFace(
+                                    video,
+                                    getDetectorOptions()
+                                )
+                                .withFaceLandmarks()
+                                .withFaceDescriptor();
 
-                    const result =
-                        faceMatcher.findBestMatch(
-                            detection.descriptor
+                        if (
+                            sessionId !== scanSessionId
+                            || !scanActive
+                            || !video.srcObject
+                        ) {
+                            processing = false;
+                            return;
+                        }
+
+                        if (!detection) {
+                            clearFaceOverlay();
+                            setStatus('Mencari wajah', 'blue');
+                            processing = false;
+                            scheduleNextScan(fastScanDelay);
+                            return;
+                        }
+
+                        drawFaceOverlay(detection, 'Wajah terdeteksi', '#38bdf8');
+
+                        setStatus('Wajah terdeteksi', 'blue');
+
+                        const result =
+                            faceMatcher.findBestMatch(
+                                detection.descriptor
+                            );
+
+                        if (result.label === 'unknown') {
+
+                            playUnknownSound();
+
+                            drawFaceOverlay(detection, 'Tidak dikenal', '#fb7185');
+
+                            setStatus('Wajah belum dikenali', 'red');
+
+                            processing = false;
+                            scheduleNextScan(normalScanDelay);
+
+                            return;
+                        }
+
+                        drawFaceOverlay(detection, 'Dikenali', '#34d399');
+
+                        const confidence =
+                            Number(result.distance.toFixed(4));
+
+                        const saveResult = await @this.call(
+                            'saveAttendance',
+                            result.label,
+                            confidence,
+                            classId
                         );
 
-                    if (result.label === 'unknown') {
+                        if (!saveResult?.saved) {
+                            setScanningState(true);
 
-                        playUnknownSound();
+                            playErrorSound();
 
-                        drawFaceOverlay(detection, 'Tidak dikenal', '#fb7185');
+                            showToast(
+                                'error',
+                                saveResult?.message || 'Presensi tidak dapat disimpan.'
+                            );
 
-                        setStatus('Wajah belum dikenali', 'red');
+                            setStatus(saveResult?.message || 'Presensi tidak tersimpan', 'red');
 
-                        processing = false;
+                            releaseProcessingLater(1500);
 
-                        return;
-                    }
+                            return;
+                        }
 
-                    drawFaceOverlay(detection, 'Dikenali', '#34d399');
-
-                    const confidence =
-                        Number(result.distance.toFixed(4));
-
-                    const saveResult = await @this.call(
-                        'saveAttendance',
-                        result.label,
-                        confidence,
-                        classId
-                    );
-
-                    if (!saveResult?.saved) {
                         setScanningState(true);
 
-                        playErrorSound();
+                        playSuccessSound();
 
                         showToast(
-                            'error',
-                            saveResult?.message || 'Presensi tidak dapat disimpan.'
+                            'success',
+                            `${saveResult.message} (${confidence})`
                         );
 
-                        setStatus(saveResult?.message || 'Presensi tidak tersimpan', 'red');
+                        setStatus('Presensi berhasil disimpan', 'green');
 
-                        setTimeout(() => {
-                            processing = false;
-                        }, 1500);
-
-                        return;
-                    }
-
-                    setScanningState(true);
-
-                    playSuccessSound();
-
-                    showToast(
-                        'success',
-                        `${saveResult.message} (${confidence})`
-                    );
-
-                    setStatus('Presensi berhasil disimpan', 'green');
-
-                    setTimeout(() => {
-
+                        releaseProcessingLater(3000);
+                    } catch (error) {
+                        clearFaceOverlay();
+                        setStatus('Mencari wajah', 'blue');
                         processing = false;
+                        scheduleNextScan(normalScanDelay);
+                    }
+                };
 
-                    }, 3000);
-
-                }, {{ $settings->scan_interval }});
+                runScanLoop();
 
             } catch (error) {
 
@@ -1170,8 +1304,9 @@
 
             scanSessionId++;
 
-            clearInterval(scanInterval);
+            clearTimeout(scanInterval);
             scanInterval = null;
+            processing = false;
 
             stopCameraStream();
             clearFaceOverlay();
