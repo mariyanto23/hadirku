@@ -46,6 +46,16 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
+     * Redirect direct GET requests to /logout without changing session state.
+     */
+    public function redirectFromGetLogout(): RedirectResponse
+    {
+        return Auth::check()
+            ? redirect()->route('dashboard')
+            : redirect()->route('login');
+    }
+
+    /**
      * Destroy an authenticated session.
      */
     public function destroy(Request $request): RedirectResponse
